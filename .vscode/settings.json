@@ -1,0 +1,27 @@
+{
+    "C_Cpp.intelliSenseEngine": "default",
+    "idf.adapterTargetName": "esp32s3",
+    "idf.customExtraPaths": "/home/mike/.espressif/tools/xtensa-esp-elf-gdb/12.1_20231023/xtensa-esp-elf-gdb/bin:/home/mike/.espressif/tools/riscv32-esp-elf-gdb/12.1_20231023/riscv32-esp-elf-gdb/bin:/home/mike/.espressif/tools/xtensa-esp-elf/esp-13.2.0_20230928/xtensa-esp-elf/bin:/home/mike/.espressif/tools/riscv32-esp-elf/esp-13.2.0_20230928/riscv32-esp-elf/bin:/home/mike/.espressif/tools/esp32ulp-elf/2.35_20220830/esp32ulp-elf/bin:/home/mike/.espressif/tools/openocd-esp32/v0.12.0-esp32-20230921/openocd-esp32/bin:/home/mike/.espressif/tools/esp-rom-elfs/20230320",
+    "idf.customExtraVars": {
+        "OPENOCD_SCRIPTS": "/home/mike/.espressif/tools/openocd-esp32/v0.12.0-esp32-20230921/openocd-esp32/share/openocd/scripts",
+        "ESP_ROM_ELF_DIR": "/home/mike/.espressif/tools/esp-rom-elfs/20230320/"
+    },
+    "idf.espIdfPath": "/home/mike/esp/v5.2.1/esp-idf",
+    "idf.openOcdConfigs": [
+        "board/esp32s3-builtin.cfg"
+    ],
+    "idf.port": "/dev/ttyACM0",
+    "idf.pythonBinPath": "/home/mike/.espressif/python_env/idf5.2_py3.12_env/bin/python",
+    "idf.toolsPath": "/home/mike/.espressif",
+    "files.associations": {
+        "stepper_encoder.h": "c",
+        "config.h": "c",
+        "rmt_tx.h": "c",
+        "ringbuf.h": "c",
+        "system.h": "c",
+        "gpio.h": "c",
+        "uart.h": "c",
+        "string.h": "c"
+    },
+    "idf.flashType": "JTAG"
+}
