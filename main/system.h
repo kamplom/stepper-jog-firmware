@@ -11,7 +11,8 @@
 typedef struct {
     uint32_t pos;
     float vel;
-    uint32_t acc;
+    float acc;
+    float jerk;
 } physical_state_t;
 
 typedef struct {

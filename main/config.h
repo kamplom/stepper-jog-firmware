@@ -6,7 +6,7 @@
 
 
 #define STEPS_PER_MM                53.3333333
-#define MAX_FEED_RATE               3000 //mm/s
+#define MAX_FEED_RATE               500 //mm/s
 #define MAX_ACCEL                   800 //mm/s^2
 //Rmt config
 #define RMT_MEM_BLOCK_SYMBOLS      64

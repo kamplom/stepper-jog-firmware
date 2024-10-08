@@ -113,14 +113,41 @@ void SmoothDamp(void)
     float exp = 1.0f / (1.0f + x + 0.48f * x * x + 0.235f * x * x * x);
     float change = sys.status.pos - target;
     float originalTo = target;
-
+    float originalVelocity = sys.status.vel;
+    float originalAcc = sys.status.acc;
     // Clamp maximum speed
-    float maxChange = MAX_FEED_RATE * STEPS_PER_MM * smoothTime;
+    // float maxChange = MAX_FEED_RATE * STEPS_PER_MM * smoothTime;
+    float maxChange = 1000 * STEPS_PER_MM * smoothTime;
     change = fmax(-maxChange, fmin(change, maxChange));
     target = sys.status.pos - change;
 
     float temp = (sys.status.vel + omega * change) * deltaTime;
     sys.status.vel = (sys.status.vel - omega * temp) * exp;
+    
+    sys.status.acc = ((sys.status.vel - originalVelocity))/deltaTime;
+    float jerk = (sys.status.acc - originalAcc)/deltaTime;
+    float max_jerk = 4500000;
+    float diff = abs(sys.status.pos-originalTo);
+    float maxSpeed2;
+    // ESP_LOGI(TAG, "deltaTime: %f", deltaTime);
+    // ESP_LOGI(TAG, "original_vel: %f", originalVelocity);
+    if (diff < 60000) {
+        maxSpeed2 =  5.14712684f/10000000000 * diff * diff * diff -7.61746767f/100000 * diff *diff + 3.65719245f * diff -3.32443566f * 1000 + 3325;
+        // ESP_LOGI(TAG, "max speed2: %f", maxSpeed2);
+    }
+    else {
+        maxSpeed2 = MAX_FEED_RATE;
+    }
+    max_jerk = fmin(max_jerk * ((fabs(originalVelocity)/maxSpeed2)*(fabs(originalVelocity)/maxSpeed2)+0.02), max_jerk);
+    // ESP_LOGI(TAG, "max_jerk: %f", max_jerk);
+    
+    jerk = fmax(-max_jerk, fmin(jerk, max_jerk));
+    // ESP_LOGI(TAG, "jerk: %f", jerk);
+    
+    sys.status.acc = originalAcc + jerk * deltaTime;
+    // ESP_LOGI(TAG, "accel: %f", sys.status.acc);
+    sys.status.vel = originalVelocity + sys.status.acc*deltaTime;
+    // ESP_LOGI(TAG, "vel: %f", sys.status.vel);
     
     // Prevent overshooting
     // if (originalTo - sys.status.pos > 0.0F == output > originalTo)

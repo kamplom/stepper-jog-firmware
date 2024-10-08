@@ -54,7 +54,7 @@ void app_main(void)
     uint32_t symbol_duration;
     uint32_t aux_steps;
     symbol_duration = 0;
-    int imod;
+    int imod = 0;
     int iterations = 0;
     int invalid_steps;
     freq = 0;
@@ -66,10 +66,11 @@ void app_main(void)
         } else {
             gpio_set_level(STEP_MOTOR_GPIO_EN, STEP_MOTOR_ENABLE_LEVEL);
             if(sys.target.pos > sys.status.pos) {
-                sys.status.vel = STEPS_PER_MM/10;
+                sys.status.vel = STEPS_PER_MM*10;
             } else {
-                sys.status.vel = STEPS_PER_MM/10;
+                sys.status.vel = -STEPS_PER_MM*10;
             }
+            sys.status.acc = 0;
             
             while (sys.target.pos != sys.status.pos) {
                 symbol_duration = fabs(STEP_MOTOR_RESOLUTION_HZ / sys.status.vel / 2);
