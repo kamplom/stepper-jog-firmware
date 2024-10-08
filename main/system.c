@@ -100,6 +100,48 @@ void parseCommand(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t 
 }
 
 
+void SmoothDamp(void)
+{
+    // Based on Game Programming Gems 4 Chapter 1.10
+    float smoothTime = 0.3;
+    float target = sys.target.pos;
+    float deltaTime = fabs(1/sys.status.vel);
+    smoothTime = fmax(0.0001F, smoothTime);
+    float omega = 2.0f / smoothTime;
+
+    float x = omega * deltaTime;
+    float exp = 1.0f / (1.0f + x + 0.48f * x * x + 0.235f * x * x * x);
+    float change = sys.status.pos - target;
+    float originalTo = target;
+
+    // Clamp maximum speed
+    float maxChange = MAX_FEED_RATE * STEPS_PER_MM * smoothTime;
+    change = fmax(-maxChange, fmin(change, maxChange));
+    target = sys.status.pos - change;
+
+    float temp = (sys.status.vel + omega * change) * deltaTime;
+    sys.status.vel = (sys.status.vel - omega * temp) * exp;
+    
+    // Prevent overshooting
+    // if (originalTo - sys.status.pos > 0.0F == output > originalTo)
+    // {
+    //     sys.status.vel = (output - originalTo) / deltaTime;
+    // }
+
+    if(sys.status.vel < 70 && sys.status.vel > 0) {
+        sys.status.vel = 70;
+    } else if (sys.status.vel > -70 && sys.status.vel < 0) {
+        sys.status.vel = -70;
+    }
+
+    if (sys.status.vel > 0) {
+        sys.status.pos += 1;
+        gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_CLOCKWISE);
+    } else {
+        sys.status.pos -= 1;
+        gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
+    }
+}
 
 void execute_line(char *payload, char *pattern) {
     // const char *command = "$J=X700F300A250";  // Example command $J=X00F700A700

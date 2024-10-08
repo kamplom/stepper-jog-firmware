@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"stepper_encoder.h": "c",
+			"config.h": "c",
+			"rmt_tx.h": "c",
+			"ringbuf.h": "c",
+			"system.h": "c",
+			"gpio.h": "c",
+			"uart.h": "c",
+			"string.h": "c"
+		}
+	}
+}

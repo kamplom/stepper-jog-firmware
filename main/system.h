@@ -10,7 +10,7 @@
 
 typedef struct {
     uint32_t pos;
-    uint32_t vel;
+    float vel;
     uint32_t acc;
 } physical_state_t;
 
@@ -53,3 +53,4 @@ void create_rmt_channel(void);
 void create_rmt_encoder(void);
 void execute_line(char *payload, char *pattern);
 float convert_to_smooth_freq(uint32_t freq1, uint32_t freq2, uint32_t freqx);
+void SmoothDamp(void);

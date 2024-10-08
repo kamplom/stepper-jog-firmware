@@ -6,3 +6,5 @@ cmake_minimum_required(VERSION 3.5)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(stepper-jog-firmware)
+set(CMAKE_C_FLAGS "-O0")
+set(CMAKE_BUILD_TYPE Debug)
