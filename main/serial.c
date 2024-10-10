@@ -73,7 +73,23 @@ static void uart_event_task(void *pvParameters)
                     char* pat = (char*)malloc(2);
                     bzero(pat, 2);
                     uart_read_bytes(UART_SEL_NUM, pat, 1, 100 / portTICK_PERIOD_MS);
-                    parse_command(dtmp, &sys.target.pos, &sys.target.vel, &sys.target.acc, &sys.target.is_incremental);
+                    if (strcmp(pat, EMERGENCY_STOP_COMMAND) == 0) {
+                        // kill rmt and disable stepper
+                        sys.state = STATE_ALERT;
+                    } else if (strcmp(pat, JOG_CANCEL_COMMAND) == 0) {
+                        // set target to position + distance needed to decelerate
+                        if (sys.state & STATE_JOGGING){
+
+                        }
+                    } else if (strcmp(dtmp, HOMING_COMMAND) == 0) {
+                        // set state to homing iff we are either idle or alert
+                        if (sys.state & (STATE_IDLE | STATE_ALERT)){
+                            sys.state = STATE_HOMING;
+                        }
+                    } else {
+                        // command is of the $ type, parse it.
+                        parse_command(dtmp, &sys.target.pos, &sys.target.vel, &sys.target.acc, &sys.target.is_incremental);
+                    }
                 }
                 break;
             //Others
@@ -102,7 +118,8 @@ void init_uart(void) {
     uart_param_config(UART_SEL_NUM, &uart_config);
     uart_set_pin(UART_SEL_NUM, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     ESP_LOGI(TAG, "Setting up patten detection");
-    uart_enable_pattern_det_baud_intr(UART_SEL_NUM, 's', 1, 9, 0, 0);
+    //uart_enable_pattern_det_baud_intr(UART_SEL_NUM, 's', 1, 9, 0, 0);
+    uart_enable_pattern_det_baud_intr(UART_SEL_NUM, '\r', 1, 9, 0, 0);
     uart_pattern_queue_reset(UART_SEL_NUM, 20);
 
     //Create buffer for read lines. Filled on ISR

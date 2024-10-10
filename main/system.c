@@ -78,6 +78,7 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
     } else {
         *xVal = 0;
     }
+    sys.target.pos = *xVal;
     // Find the 'F' value
     token = strchr(copy, 'F');
     if (token != NULL) {
@@ -94,4 +95,58 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
         *aVal = MAX_ACCEL * STEPS_PER_MM / 2;
     }
     free(copy);  // Free the copied string
+}
+
+void homing(void){
+    uint32_t symbol_duration = 0;
+    rmt_symbol_word_t symbol;
+    int phase = 0;
+    symbol_duration = STEP_MOTOR_RESOLUTION_HZ * STEPS_PER_MM / HOMING_FAST_SPEED / 2;
+    symbol.duration0 = symbol_duration;
+    symbol.level0 = 0;
+    symbol.duration1 = symbol_duration;
+    symbol.level1 = 1;
+    gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
+    
+    while(1) {
+        if (phase == 0) {
+            if(gpio_get_level(LIMIT_SWITCH_MIN_GPIO)){
+                rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
+            } else {
+                phase = 1;
+                gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_CLOCKWISE);       
+            }
+        } else if (phase == 1) {
+            for (int i = 0; i < (int)(HOMING_RETRACTION_DISTANCE * STEPS_PER_MM); i++) {
+                rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
+            }
+            phase = 2;
+            gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
+            symbol_duration = STEP_MOTOR_RESOLUTION_HZ * STEPS_PER_MM / HOMING_SLOW_SPEED / 2;
+            symbol.duration0 = symbol_duration;
+            symbol.level0 = 0;
+            symbol.duration1 = symbol_duration;
+            symbol.level1 = 1;
+        } else if (phase == 2) {
+            if(gpio_get_level(LIMIT_SWITCH_MIN_GPIO)) {
+                rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
+            } else {
+                phase = 3;
+                gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_CLOCKWISE);
+                symbol_duration = STEP_MOTOR_RESOLUTION_HZ * STEPS_PER_MM / HOMING_FAST_SPEED / 2;
+                symbol.duration0 = symbol_duration;
+                symbol.level0 = 0;
+                symbol.duration1 = symbol_duration;
+                symbol.level1 = 1;
+            }
+        } else if (phase == 3) {
+            for (int i = 0; i < (int)(HOMING_RETRACTION_DISTANCE * STEPS_PER_MM); i++) {
+                rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
+            }
+            phase = 4;
+        } else if (phase == 4) {
+            sys.state = STATE_IDLE;
+            return;
+        }
+    }
 }

@@ -23,10 +23,6 @@ typedef struct {
     uint32_t vel;
     uint32_t acc;
     bool is_incremental;
-    uint32_t accel_steps;
-    uint32_t constant_speed_steps;
-    uint32_t total_steps;
-    bool dir;
 } physical_target_t;
 
 typedef struct system {
@@ -35,6 +31,7 @@ typedef struct system {
     physical_state_t status;
     physical_state_t prev_status;
     physical_target_t target;
+    uint8_t state;
 } system_t;
 
 
@@ -60,3 +57,4 @@ void execute_line(char *payload, char *pattern);
 float convert_to_smooth_freq(uint32_t freq1, uint32_t freq2, uint32_t freqx);
 void SmoothDamp(void);
 void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t *aVal, bool *is_incremental);
+void homing(void);

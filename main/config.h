@@ -13,7 +13,21 @@
 //Rmt config
 #define RMT_MEM_BLOCK_SYMBOLS      64
 #define RMT_TRANS_QUEUE_DEPTH      1
+#define EMERGENCY_STOP_COMMAND     "emergency"
+#define JOG_CANCEL_COMMAND         "jog-cancel"
+#define HOMING_COMMAND             "h"
+#define EOL_COMMAND                "endofline"
+#define EOLR_COMMAND               "return/r"
 
+#define HOMING_FAST_SPEED           100
+#define HOMING_SLOW_SPEED           25
+#define HOMING_RETRACTION_DISTANCE  2 //mm
+
+
+#define STATE_ALERT                (1 << 0)
+#define STATE_IDLE                 (1 << 1)
+#define STATE_JOGGING              (1 << 2)
+#define STATE_HOMING               (1 << 3)
 
 #define STEP_MOTOR_GPIO_EN       6
 #define STEP_MOTOR_GPIO_DIR      5
@@ -21,6 +35,9 @@
 #define STEP_MOTOR_ENABLE_LEVEL  0
 #define STEP_MOTOR_SPIN_DIR_CLOCKWISE 0
 #define STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE !STEP_MOTOR_SPIN_DIR_CLOCKWISE
+
+#define LIMIT_SWITCH_MIN_GPIO   10
+#define LIMIT_SWITCH_MAX_GPIO   9 
 
 #define STEP_MOTOR_RESOLUTION_HZ 1000000 // 1MHz resolution. determines how long are the high and low levels of step pulse signal
 // i need a function to calculate it in terms of belt pitch pulley steps etc.

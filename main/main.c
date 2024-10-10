@@ -28,6 +28,13 @@ void app_main(void)
     };
     ESP_ERROR_CHECK(gpio_config(&en_dir_gpio_config));
 
+
+    gpio_config_t stops_gpio_config = {
+        .mode = GPIO_MODE_INPUT,
+        .intr_type = GPIO_INTR_DISABLE,
+        .pin_bit_mask = 1ULL << LIMIT_SWITCH_MIN_GPIO | 1ULL << LIMIT_SWITCH_MAX_GPIO, 
+    };
+    ESP_ERROR_CHECK(gpio_config(&stops_gpio_config));
     //end of temporal
     // init rmt channel and encoder
     create_rmt_channel();
@@ -37,16 +44,24 @@ void app_main(void)
     // init sys variables
     sys.target.pos = 0;
     sys.status.pos = 0;
-
+    sys.state = STATE_ALERT;
     // variables for main loop
     uint32_t symbol_duration;
     symbol_duration = 0;
     int iterations = 0;
     rmt_symbol_word_t symbol;
-
+    gpio_set_level(STEP_MOTOR_GPIO_EN, STEP_MOTOR_ENABLE_LEVEL);
     // main loop. If target is not pos exectues whatever update_velocity tells it to.
     while(1) {
-        if (sys.target.pos == sys.status.pos) {
+        // if we are in alert we will keep falling into here
+        if (sys.state & STATE_ALERT) {
+            vTaskDelay(pdMS_TO_TICKS(200));
+        } else if (sys.state & STATE_HOMING) {
+            // run homing sequence
+            gpio_set_level(STEP_MOTOR_GPIO_EN, STEP_MOTOR_ENABLE_LEVEL);
+            homing();
+            gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
+        } else if (sys.target.pos == sys.status.pos) {
             gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
             vTaskDelay(pdMS_TO_TICKS(100));
         } else {
@@ -61,6 +76,7 @@ void app_main(void)
             }
             sys.status.acc = 0;
             iterations = 0;
+            sys.state = STATE_JOGGING;
             // keep doing steps until we reach the desired position
             while (sys.target.pos != sys.status.pos) {
                 // send symobl
@@ -77,6 +93,7 @@ void app_main(void)
                 //}
                 iterations += 1;
             }
+            sys.state = STATE_IDLE;
             ESP_LOGI(TAG, "Iterations %d",iterations);
             ESP_LOGI(TAG, "sys.target.pos: %"PRIu32, sys.target.pos);
         }
