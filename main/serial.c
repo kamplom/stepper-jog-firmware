@@ -1,9 +1,10 @@
-#include "config.h"
+// Include esp-idf libraries
 #include "driver/rmt_tx.h"
 #include "esp_log.h"
-#include "system.h"
 #include <string.h>
-
+// include modules
+#include "system.h"
+#include "config.h"
 static const char *TAG = "Serial";
 
 static void uart_event_task(void *pvParameters)
@@ -72,7 +73,7 @@ static void uart_event_task(void *pvParameters)
                     char* pat = (char*)malloc(2);
                     bzero(pat, 2);
                     uart_read_bytes(UART_SEL_NUM, pat, 1, 100 / portTICK_PERIOD_MS);
-                    execute_line(dtmp, pat);
+                    parse_command(dtmp, &sys.target.pos, &sys.target.vel, &sys.target.acc, &sys.target.is_incremental);
                 }
                 break;
             //Others

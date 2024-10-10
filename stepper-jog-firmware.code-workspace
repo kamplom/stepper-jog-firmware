@@ -13,7 +13,8 @@
 			"system.h": "c",
 			"gpio.h": "c",
 			"uart.h": "c",
-			"string.h": "c"
+			"string.h": "c",
+			"freertos.h": "c"
 		}
 	}
 }

@@ -4,7 +4,8 @@
     {
       "type": "gdbtarget",
       "request": "attach",
-      "name": "Eclipse CDT GDB Adapter"
+      "name": "Eclipse CDT GDB Adapter",
+      "preLaunchTask": "openocd",
     },
     {
       "type": "espidf",
