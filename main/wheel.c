@@ -54,58 +54,43 @@ void pcnt_init() {
     ESP_ERROR_CHECK(pcnt_unit_start(pcnt_unit));
 }
 void smooth_damp() {
-    float smooth_time = 1;
-    float omega = 2 / smooth_time;
-    float delta_time = WHEEL_TIMER_INTERVAL / 1000; 
+    float current = sys.status.vel;
+    float target = sys.wheel.vel;
+    float current_velocity = sys.status.acc;
+    float smooth_time = 3;
+    float max_speed = 9999999999999999; //max accel
+    float delta_time = fabs(1/sys.status.vel);
 
+    float omega = 2 / delta_time;
     float x = omega * delta_time;
     float exp = 1 / (1 + x + 0.48f * x * x + 0.235f * x * x * x);
-    float change = sys.status.vel - sys.wheel.vel;
-    float original_to = sys.wheel.vel;
+    float change = current - target;
+    float origialTo = target;
 
-    float temp = (sys.status.vel + omega * change) * delta_time;
-    sys.status.vel = sys.wheel.vel + (change + temp) * exp;
-    sys.status.vel = MAX_FEED_RATE * STEPS_PER_MM / 20000;
+    float max_change = max_speed * smooth_time;
+    change = fmin(max_change, fmax(change, -max_change));
+    target = current - change;
 
+    float temp = (current_velocity + omega * change) * delta_time;
+    sys.status.acc = (current_velocity - omega * temp) * exp;
+    sys.status.vel = target + (change + temp) * exp;
+    if(sys.status.vel < MIN_FEED_RATE  && sys.status.vel > 0 && sys.wheel.vel == 0) {
+        sys.status.vel = 0;
+    } else if (sys.status.vel > -MIN_FEED_RATE && sys.status.vel < 0 && sys.wheel.vel == 0) {
+        sys.status.vel = 0;
+    }
 }
 static void wheel_timer_callback(void* arg) {
     int32_t pulse_count = 0;
-    static int16_t last_pulse_count = 0;
 
     ESP_ERROR_CHECK(pcnt_unit_get_count(pcnt_unit, &pulse_count));
     pcnt_unit_clear_count(pcnt_unit);
-    sys.wheel.vel = (pulse_count) * 1000 / WHEEL_TIMER_INTERVAL;
+    sys.wheel.vel = (pulse_count) * 1000 / WHEEL_TIMER_INTERVAL * MAX_FEED_RATE * STEPS_PER_MM / 10000;
     //ESP_LOGI(TAG, "wheel speed: %f", sys.wheel.vel);
-    last_pulse_count = pulse_count;
 
-    //smooth_damp();
-
-    //sys.status.vel = sys.wheel.vel / 9000 * MAX_FEED_RATE * STEPS_PER_MM;
-    //ESP_LOGI(TAG, "status vel: %f", sys.status.vel);
-    float symbol_duration = fabs(STEP_MOTOR_RESOLUTION_HZ / sys.status.vel / 2);
-    rmt_symbol_word_t symbol;
-    symbol.duration0 = symbol_duration;
-    symbol.level0 = 0;
-    symbol.duration1 = symbol_duration;
-    symbol.level1 = 1;
-    rmt_transmit_config_t tx_config2;
-    tx_config2.loop_count = -1;
-    tx_config2.flags.queue_nonblocking = true;
-    //if(sys.status.vel > 0) {
-    //    gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
-    //} else {
-    //    gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_CLOCKWISE);
-    //}
     if(sys.wheel.vel != 0) {
-        rmt_disable(motor_chan);
-        rmt_enable(motor_chan);
-        rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config2);
-    } else {
-        //sys.status.vel = 0;
-        //rmt_disable(motor_chan);
-        //rmt_enable(motor_chan);
+        set_state(STATE_WHEEL);
     }
-
 }
 
 void wheel_timer_init() {

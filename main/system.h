@@ -11,7 +11,8 @@
 #pragma once
 
 #define LINE_ENDING '\n'
-
+#define CCW         false
+#define CW          true
 typedef struct {
     uint32_t pos;
     float vel;

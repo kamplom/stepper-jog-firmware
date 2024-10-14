@@ -25,7 +25,7 @@
 
 #define WHEEL_ENCODER_A             12
 #define WHEEL_ENCODER_B             11
-#define WHEEL_TIMER_INTERVAL        25 //miliseconds
+#define WHEEL_TIMER_INTERVAL        100 //miliseconds
 
 #define STATE_ALERT                (1 << 0)
 #define STATE_IDLE                 (1 << 1)
@@ -33,7 +33,7 @@
 #define STATE_HOMING               (1 << 3)
 #define STATE_WHEEL                (1 << 4)
 
-#define ENABLE_DELAY             200 //ms
+#define ENABLE_DELAY             250 //ms
 #define STEP_MOTOR_GPIO_EN       6
 #define STEP_MOTOR_GPIO_DIR      5
 #define STEP_MOTOR_GPIO_STEP     4

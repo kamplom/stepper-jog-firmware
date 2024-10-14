@@ -161,6 +161,7 @@ bool set_state(uint8_t state) {
         case STATE_ALERT:
             // only overwrite if it is the alert case
             sys.state = STATE_ALERT;
+            ESP_LOGD(TAG, "State: alert");
             return true;
         case STATE_HOMING:
             if (sys.state & (STATE_ALERT | STATE_IDLE)) {
@@ -168,6 +169,7 @@ bool set_state(uint8_t state) {
                 sys.state &= ~(STATE_ALERT | STATE_IDLE);
                 // set state wihtout overwritting
                 sys.state |= STATE_HOMING;
+                ESP_LOGD(TAG, "State homing");
                 return true; 
             } else {
                 return false;
@@ -176,6 +178,7 @@ bool set_state(uint8_t state) {
             if (sys.state & STATE_IDLE) {
                 sys.state &= ~STATE_IDLE;
                 sys.state |= STATE_JOGGING;
+                ESP_LOGD(TAG, "State: jogging");
                 return true;
             } else {
                 return false;
@@ -183,7 +186,9 @@ bool set_state(uint8_t state) {
         case STATE_WHEEL:
             if (sys.state & STATE_IDLE) {
                 sys.state &= ~STATE_IDLE;
-                sys.state |= STATE_JOGGING;
+                sys.state |= STATE_WHEEL;
+                ESP_LOGD(TAG, "State: wheel");
+                return true;
             } else {
                 return false;
             }
@@ -191,6 +196,8 @@ bool set_state(uint8_t state) {
             if (sys.state & (STATE_JOGGING | STATE_HOMING | STATE_WHEEL)) {
                 sys.state &= ~(STATE_JOGGING | STATE_HOMING | STATE_WHEEL);
                 sys.state |= STATE_IDLE;
+                ESP_LOGD(TAG, "State: idle");
+                return true;
             } else {
                 return false;
             }
@@ -203,16 +210,19 @@ bool set_state(uint8_t state) {
 
 bool motor_enabler(bool action) {
     if (sys.state & STATE_ALERT) {
+        ESP_LOGD(TAG, "Motor not enabled, alert state");
         gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
         return false;
     }
     if (action) {
         gpio_set_level(STEP_MOTOR_GPIO_EN, STEP_MOTOR_ENABLE_LEVEL);
         vTaskDelay(pdMS_TO_TICKS(ENABLE_DELAY));
+        ESP_LOGD(TAG, "Motor enabled");
         return true;
     } else {
         gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
         vTaskDelay(pdMS_TO_TICKS(ENABLE_DELAY));
+        ESP_LOGD(TAG, "Motor disabled");
         return true;
     }
 }
