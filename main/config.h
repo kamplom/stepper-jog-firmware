@@ -33,6 +33,7 @@
 #define STATE_HOMING               (1 << 3)
 #define STATE_WHEEL                (1 << 4)
 
+#define ENABLE_DELAY             200 //ms
 #define STEP_MOTOR_GPIO_EN       6
 #define STEP_MOTOR_GPIO_DIR      5
 #define STEP_MOTOR_GPIO_STEP     4

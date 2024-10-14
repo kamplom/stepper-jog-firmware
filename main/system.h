@@ -65,3 +65,4 @@ void SmoothDamp(void);
 void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t *aVal, bool *is_incremental);
 void homing(void);
 bool set_state(uint8_t state);
+bool motor_enabler(bool action);

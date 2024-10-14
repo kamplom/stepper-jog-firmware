@@ -53,7 +53,6 @@ void app_main(void)
     symbol_duration = 0;
     int iterations = 0;
     rmt_symbol_word_t symbol;
-    gpio_set_level(STEP_MOTOR_GPIO_EN, STEP_MOTOR_ENABLE_LEVEL);
     
     // main loop. If target is not pos exectues whatever update_velocity tells it to.
     pcnt_init();
@@ -62,23 +61,22 @@ void app_main(void)
     while(1) {
         // if we are in alert we will keep falling into here
         if (sys.state & STATE_ALERT) {
-            gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
-            vTaskDelay(pdMS_TO_TICKS(200));
+            vTaskDelay(pdMS_TO_TICKS(10));
+            motor_enabler(false);
         } else if (sys.state & STATE_HOMING) {
             // run homing sequence
-            gpio_set_level(STEP_MOTOR_GPIO_EN, STEP_MOTOR_ENABLE_LEVEL);
+            motor_enabler(true);
             ESP_LOGI(TAG, "Starting homig sequence");
             homing();
             ESP_LOGI(TAG, "Ended homing sequence");
-            gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
+            motor_enabler(false);
         } else if (sys.state & STATE_JOGGING) {
             // exit the inner while loop when 
             // we might need to jog
             if (sys.target.pos != sys.status.pos) {
                 // Target neq Pos
                 // Enable motor
-                gpio_set_level(STEP_MOTOR_GPIO_EN, STEP_MOTOR_ENABLE_LEVEL);
-                vTaskDelay(pdMS_TO_TICKS(150));
+                motor_enabler(true);
                 // Set initial velocity and acceleration
                 if(sys.target.pos > sys.status.pos) {
                     sys.status.vel = STEPS_PER_MM*INITIAL_VELOCITY;
@@ -106,12 +104,13 @@ void app_main(void)
                     iterations += 1;
                 }
                 sys.status.vel = 0;
-                sys.state = STATE_IDLE;
                 ESP_LOGI(TAG, "Iterations %d",iterations);
                 ESP_LOGI(TAG, "sys.target.pos: %"PRIu32, sys.target.pos);
                 set_state(STATE_IDLE);
+                motor_enabler(false);
             } else {
                 set_state(STATE_IDLE);
+                motor_enabler(false);
             }
         } else if (sys.state & STATE_WHEEL) {
             while(sys.wheel.vel != 0) {
@@ -119,7 +118,7 @@ void app_main(void)
             }
         } else {
             vTaskDelay(pdMS_TO_TICKS(10));
-            gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
+            motor_enabler(false);
         }
     }
 }

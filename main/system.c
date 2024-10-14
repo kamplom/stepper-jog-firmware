@@ -200,3 +200,19 @@ bool set_state(uint8_t state) {
     // just in case we manage to get here somehow.
     return false;
 }
+
+bool motor_enabler(bool action) {
+    if (sys.state & STATE_ALERT) {
+        gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
+        return false;
+    }
+    if (action) {
+        gpio_set_level(STEP_MOTOR_GPIO_EN, STEP_MOTOR_ENABLE_LEVEL);
+        vTaskDelay(pdMS_TO_TICKS(ENABLE_DELAY));
+        return true;
+    } else {
+        gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
+        vTaskDelay(pdMS_TO_TICKS(ENABLE_DELAY));
+        return true;
+    }
+}
