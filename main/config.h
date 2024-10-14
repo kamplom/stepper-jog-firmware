@@ -3,7 +3,7 @@
  *
  * Eventually will contain defaults and the config will be changable at run time
  */
-
+#include "driver/timer.h"
 
 #define STEPS_PER_MM                53.3333333
 #define MAX_FEED_RATE               200 //mm/s
@@ -23,11 +23,15 @@
 #define HOMING_SLOW_SPEED           25
 #define HOMING_RETRACTION_DISTANCE  2 //mm
 
+#define WHEEL_ENCODER_A             12
+#define WHEEL_ENCODER_B             11
+#define WHEEL_TIMER_INTERVAL        25 //miliseconds
 
 #define STATE_ALERT                (1 << 0)
 #define STATE_IDLE                 (1 << 1)
 #define STATE_JOGGING              (1 << 2)
 #define STATE_HOMING               (1 << 3)
+#define STATE_WHEEL                (1 << 4)
 
 #define STEP_MOTOR_GPIO_EN       6
 #define STEP_MOTOR_GPIO_DIR      5

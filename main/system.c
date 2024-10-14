@@ -8,7 +8,7 @@
 #include <inttypes.h>
 #include <math.h>
 #include "driver/gpio.h"
-
+#include "driver/pulse_cnt.h"
 // Include modules
 #include "system.h"
 #include "config.h"
@@ -19,6 +19,7 @@ rmt_channel_handle_t motor_chan = NULL;
 rmt_encoder_handle_t stepper_encoder = NULL;
 QueueHandle_t uart_queue = NULL;
 system_t sys = {};
+pcnt_unit_handle_t pcnt_unit = NULL;
 
 void mm_to_steps(float *mm, uint32_t *steps) {
     *steps = (uint32_t)(*mm * STEPS_PER_MM);
@@ -94,6 +95,7 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
     } else {
         *aVal = MAX_ACCEL * STEPS_PER_MM / 2;
     }
+    set_state(STATE_JOGGING);
     free(copy);  // Free the copied string
 }
 
@@ -149,4 +151,52 @@ void homing(void){
             return;
         }
     }
+}
+
+
+bool set_state(uint8_t state) {
+    // do not use sys.state = in this function
+    // in order to not be able to overwrite the alert state
+    switch (state) {
+        case STATE_ALERT:
+            // only overwrite if it is the alert case
+            sys.state = STATE_ALERT;
+            return true;
+        case STATE_HOMING:
+            if (sys.state & (STATE_ALERT | STATE_IDLE)) {
+                // clear states
+                sys.state &= ~(STATE_ALERT | STATE_IDLE);
+                // set state wihtout overwritting
+                sys.state |= STATE_HOMING;
+                return true; 
+            } else {
+                return false;
+            }
+        case STATE_JOGGING:
+            if (sys.state & STATE_IDLE) {
+                sys.state &= ~STATE_IDLE;
+                sys.state |= STATE_JOGGING;
+                return true;
+            } else {
+                return false;
+            }
+        case STATE_WHEEL:
+            if (sys.state & STATE_IDLE) {
+                sys.state &= ~STATE_IDLE;
+                sys.state |= STATE_JOGGING;
+            } else {
+                return false;
+            }
+        case STATE_IDLE:
+            if (sys.state & (STATE_JOGGING | STATE_HOMING | STATE_WHEEL)) {
+                sys.state &= ~(STATE_JOGGING | STATE_HOMING | STATE_WHEEL);
+                sys.state |= STATE_IDLE;
+            } else {
+                return false;
+            }
+        default:
+            return false;
+    }
+    // just in case we manage to get here somehow.
+    return false;
 }

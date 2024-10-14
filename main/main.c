@@ -13,6 +13,7 @@
 #include "config.h"
 #include "system.h"
 #include "serial.h"
+#include "wheel.h"
 
 static const char *TAG = "main";
 
@@ -41,9 +42,11 @@ void app_main(void)
     create_rmt_encoder();
 
     init_uart();
+
     // init sys variables
     sys.target.pos = 0;
     sys.status.pos = 0;
+    sys.status.vel = 0;
     sys.state = STATE_ALERT;
     // variables for main loop
     uint32_t symbol_duration;
@@ -51,51 +54,72 @@ void app_main(void)
     int iterations = 0;
     rmt_symbol_word_t symbol;
     gpio_set_level(STEP_MOTOR_GPIO_EN, STEP_MOTOR_ENABLE_LEVEL);
+    
     // main loop. If target is not pos exectues whatever update_velocity tells it to.
+    pcnt_init();
+    wheel_timer_init();
+    
     while(1) {
         // if we are in alert we will keep falling into here
         if (sys.state & STATE_ALERT) {
+            gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
             vTaskDelay(pdMS_TO_TICKS(200));
         } else if (sys.state & STATE_HOMING) {
             // run homing sequence
             gpio_set_level(STEP_MOTOR_GPIO_EN, STEP_MOTOR_ENABLE_LEVEL);
+            ESP_LOGI(TAG, "Starting homig sequence");
             homing();
+            ESP_LOGI(TAG, "Ended homing sequence");
             gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
-        } else if (sys.target.pos == sys.status.pos) {
-            gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
-            vTaskDelay(pdMS_TO_TICKS(100));
-        } else {
-            // Target neq Pos
-            // Enable motor
-            gpio_set_level(STEP_MOTOR_GPIO_EN, STEP_MOTOR_ENABLE_LEVEL);
-            // Set initial velocity and acceleration
-            if(sys.target.pos > sys.status.pos) {
-                sys.status.vel = STEPS_PER_MM*INITIAL_VELOCITY;
+        } else if (sys.state & STATE_JOGGING) {
+            // exit the inner while loop when 
+            // we might need to jog
+            if (sys.target.pos != sys.status.pos) {
+                // Target neq Pos
+                // Enable motor
+                gpio_set_level(STEP_MOTOR_GPIO_EN, STEP_MOTOR_ENABLE_LEVEL);
+                vTaskDelay(pdMS_TO_TICKS(150));
+                // Set initial velocity and acceleration
+                if(sys.target.pos > sys.status.pos) {
+                    sys.status.vel = STEPS_PER_MM*INITIAL_VELOCITY;
+                } else {
+                    sys.status.vel = -STEPS_PER_MM*INITIAL_VELOCITY;
+                }
+                sys.status.acc = 0;
+                iterations = 0;
+                sys.state = STATE_JOGGING;
+                // keep doing steps until we reach the desired position
+                ESP_LOGI(TAG, "Jogging to %"PRIu32" from %"PRIu32, sys.target.pos, sys.status.pos);
+                while (sys.target.pos != sys.status.pos) {
+                    // send symobl
+                    symbol_duration = fabs(STEP_MOTOR_RESOLUTION_HZ / sys.status.vel / 2);
+                    symbol.duration0 = symbol_duration;
+                    symbol.level0 = 0;
+                    symbol.duration1 = symbol_duration;
+                    symbol.level1 = 1;
+                    rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
+                    //calc next symbol, it will increase position
+                    update_velocity();
+                    //if (iterations == 15000) {
+                    //    sys.target.pos = 0;
+                    //}
+                    iterations += 1;
+                }
+                sys.status.vel = 0;
+                sys.state = STATE_IDLE;
+                ESP_LOGI(TAG, "Iterations %d",iterations);
+                ESP_LOGI(TAG, "sys.target.pos: %"PRIu32, sys.target.pos);
+                set_state(STATE_IDLE);
             } else {
-                sys.status.vel = -STEPS_PER_MM*INITIAL_VELOCITY;
+                set_state(STATE_IDLE);
             }
-            sys.status.acc = 0;
-            iterations = 0;
-            sys.state = STATE_JOGGING;
-            // keep doing steps until we reach the desired position
-            while (sys.target.pos != sys.status.pos) {
-                // send symobl
-                symbol_duration = fabs(STEP_MOTOR_RESOLUTION_HZ / sys.status.vel / 2);
-                symbol.duration0 = symbol_duration;
-                symbol.level0 = 0;
-                symbol.duration1 = symbol_duration;
-                symbol.level1 = 1;
-                rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
-                //calc next symbol, it will increase position
-                update_velocity();
-                //if (iterations == 15000) {
-                //    sys.target.pos = 0;
-                //}
-                iterations += 1;
+        } else if (sys.state & STATE_WHEEL) {
+            while(sys.wheel.vel != 0) {
+                // do wheel stuff 
             }
-            sys.state = STATE_IDLE;
-            ESP_LOGI(TAG, "Iterations %d",iterations);
-            ESP_LOGI(TAG, "sys.target.pos: %"PRIu32, sys.target.pos);
+        } else {
+            vTaskDelay(pdMS_TO_TICKS(10));
+            gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
         }
     }
 }

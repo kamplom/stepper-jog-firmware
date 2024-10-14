@@ -3,6 +3,7 @@
 #include "driver/rmt_tx.h"
 #include "driver/uart.h"
 #include "freertos/ringbuf.h"
+#include "driver/pulse_cnt.h"
 
 // Include moduels
 #include "config.h"
@@ -25,6 +26,10 @@ typedef struct {
     bool is_incremental;
 } physical_target_t;
 
+typedef struct {
+    float vel;
+} wheel_state_t;
+
 typedef struct system {
     bool position_lost;
     uint32_t position;
@@ -32,6 +37,7 @@ typedef struct system {
     physical_state_t prev_status;
     physical_target_t target;
     uint8_t state;
+    wheel_state_t wheel;    
 } system_t;
 
 
@@ -49,7 +55,7 @@ extern rmt_channel_handle_t motor_chan;
 extern rmt_encoder_handle_t stepper_encoder;
 extern QueueHandle_t uart_queue;
 extern RingbufHandle_t line_buff;
-
+extern pcnt_unit_handle_t pcnt_unit;
 
 void create_rmt_channel(void);
 void create_rmt_encoder(void);
@@ -58,3 +64,4 @@ float convert_to_smooth_freq(uint32_t freq1, uint32_t freq2, uint32_t freqx);
 void SmoothDamp(void);
 void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t *aVal, bool *is_incremental);
 void homing(void);
+bool set_state(uint8_t state);

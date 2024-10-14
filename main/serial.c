@@ -78,14 +78,10 @@ static void uart_event_task(void *pvParameters)
                         sys.state = STATE_ALERT;
                     } else if (strcmp(pat, JOG_CANCEL_COMMAND) == 0) {
                         // set target to position + distance needed to decelerate
-                        if (sys.state & STATE_JOGGING){
 
-                        }
                     } else if (strcmp(dtmp, HOMING_COMMAND) == 0) {
                         // set state to homing iff we are either idle or alert
-                        if (sys.state & (STATE_IDLE | STATE_ALERT)){
-                            sys.state = STATE_HOMING;
-                        }
+                        set_state(STATE_HOMING);
                     } else {
                         // command is of the $ type, parse it.
                         parse_command(dtmp, &sys.target.pos, &sys.target.vel, &sys.target.acc, &sys.target.is_incremental);
