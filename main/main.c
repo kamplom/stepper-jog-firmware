@@ -97,7 +97,7 @@ void app_main(void)
                     symbol.level1 = 1;
                     rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
                     //calc next symbol, it will increase position
-                    update_velocity();
+                    update_velocity(sys.target.pos, &sys.status.pos, &sys.status.vel, &sys.status.acc);
                     //if (iterations == 15000) {
                     //    sys.target.pos = 0;
                     //}
