@@ -148,6 +148,9 @@ void homing(void){
             phase = 4;
         } else if (phase == 4) {
             sys.state = STATE_IDLE;
+            sys.status.pos = 0;
+            sys.status.vel = 0;
+            sys.status.acc = 0;
             return;
         }
     }

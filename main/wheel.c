@@ -53,40 +53,51 @@ void pcnt_init() {
     ESP_LOGI(TAG, "start pcnt unit");
     ESP_ERROR_CHECK(pcnt_unit_start(pcnt_unit));
 }
-void smooth_damp() {
-    float current = sys.status.vel;
-    float target = sys.wheel.vel;
-    float current_velocity = sys.status.acc;
-    float smooth_time = 3;
+void smooth_damp(float target, float *vel_ptr, float *acc_ptr) {
+    float current = *(vel_ptr);
+    float current_velocity = *(acc_ptr);
+    float smooth_time = 0.3;
     float max_speed = 9999999999999999; //max accel
-    float delta_time = fabs(1/sys.status.vel);
+    float delta_time = fabs(1/(current+0.001));
 
-    float omega = 2 / delta_time;
+    float omega = 2 / smooth_time;
     float x = omega * delta_time;
     float exp = 1 / (1 + x + 0.48f * x * x + 0.235f * x * x * x);
     float change = current - target;
-    float origialTo = target;
+    float originalTo = target;
 
     float max_change = max_speed * smooth_time;
     change = fmin(max_change, fmax(change, -max_change));
     target = current - change;
 
     float temp = (current_velocity + omega * change) * delta_time;
-    sys.status.acc = (current_velocity - omega * temp) * exp;
-    sys.status.vel = target + (change + temp) * exp;
-    if(sys.status.vel < MIN_FEED_RATE  && sys.status.vel > 0 && sys.wheel.vel == 0) {
-        sys.status.vel = 0;
-    } else if (sys.status.vel > -MIN_FEED_RATE && sys.status.vel < 0 && sys.wheel.vel == 0) {
-        sys.status.vel = 0;
+    float acc = (current_velocity - omega * temp) * exp;
+    float vel = target + (change + temp) * exp;
+
+    if ((originalTo - current > 0.0f) == (vel > originalTo)) {
+        vel = originalTo;
+        acc = (vel - originalTo) / delta_time;
     }
+    if(vel < MIN_FEED_RATE  && vel > 0 && target == 0) {
+        vel = 0;
+    } else if (vel > -MIN_FEED_RATE && vel < 0 && target == 0) {
+        vel = 0;
+    }
+    *(vel_ptr) = vel;
+    *(acc_ptr) = acc;
 }
 static void wheel_timer_callback(void* arg) {
     int32_t pulse_count = 0;
 
     ESP_ERROR_CHECK(pcnt_unit_get_count(pcnt_unit, &pulse_count));
     pcnt_unit_clear_count(pcnt_unit);
-    sys.wheel.vel = (pulse_count) * 1000 / WHEEL_TIMER_INTERVAL * MAX_FEED_RATE * STEPS_PER_MM / 10000;
-    //ESP_LOGI(TAG, "wheel speed: %f", sys.wheel.vel);
+    if (abs(pulse_count) > 60) {
+        sys.wheel.vel = (pulse_count) * 1000 / WHEEL_TIMER_INTERVAL * MAX_FEED_RATE * STEPS_PER_MM / 10000;
+    } else {
+        sys.wheel.vel = 0;
+    }
+    
+    //ESP_LOGI(TAG, "pulse count: %"PRIi32, pulse_count);
 
     if(sys.wheel.vel != 0) {
         set_state(STATE_WHEEL);

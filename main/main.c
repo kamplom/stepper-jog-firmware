@@ -98,6 +98,7 @@ void app_main(void)
                     rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
                     //calc next symbol, it will increase position
                     update_velocity(sys.target.pos, &sys.status.pos, &sys.status.vel, &sys.status.acc);
+                    ESP_LOGI(TAG, "vel: %f", sys.status.vel);
                     //if (iterations == 15000) {
                     //    sys.target.pos = 0;
                     //}
@@ -113,26 +114,112 @@ void app_main(void)
                 motor_enabler(false);
             }
         } else if (sys.state & STATE_WHEEL) {
-            motor_enabler(true);
-            if(sys.wheel.vel > 0) {
-                sys.status.vel = STEPS_PER_MM*INITIAL_VELOCITY;
-                gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_CLOCKWISE);
-            } else {
-                sys.status.vel = -STEPS_PER_MM*INITIAL_VELOCITY;
-                gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
+            ESP_LOGI(TAG, "pos: %"PRIu32, sys.status.pos);
+            if (!((sys.status.pos == 0 && sys.wheel.vel < 0) || (sys.status.pos == (uint32_t)(500*STEPS_PER_MM) && sys.wheel.vel > 0))) {
+                motor_enabler(true);
             }
-            while(sys.wheel.vel != 0 || sys.status.vel != 0) {
+            float smooth_vel = sys.status.vel;
+            float smooth_acc = sys.status.acc;
+            uint32_t smooth_pos = sys.status.pos;
+            float update_vel = sys.status.vel;
+            uint32_t update_pos = sys.status.pos;
+            float update_acc = sys.status.acc;
+            //set dir and st v to zero
+            if(sys.wheel.vel > 0) {
+                sys.status.vel = 0;
+                gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_CLOCKWISE);
+                vTaskDelay(pdMS_TO_TICKS(20));
+            } else {
+                sys.status.vel = 0;
+                gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
+                vTaskDelay(pdMS_TO_TICKS(20));
+            }
+            
+            while((sys.wheel.vel != 0 || sys.status.vel != 0)) {
                 sys.prev_status.vel = sys.status.vel;
-                smooth_damp();
-                symbol_duration = fabs(STEP_MOTOR_RESOLUTION_HZ / sys.status.vel / 2);
+                if (sys.status.vel == 0) {
+                    if (sys.wheel.vel > 0) {
+                        update_vel = STEPS_PER_MM*INITIAL_VELOCITY;
+                    } else {
+                        update_vel = -STEPS_PER_MM*INITIAL_VELOCITY;
+                    }
+                } else {
+                    update_vel = sys.status.vel;
+                }
+                smooth_vel = sys.status.vel;
+                smooth_acc = sys.status.acc;
+                smooth_pos = sys.status.pos;
+                update_pos = sys.status.pos;
+                update_acc = sys.status.acc;
+                //ESP_LOGI(TAG, "sys pos %"PRIu32, sys.status.pos);
+                //ESP_LOGI(TAG, "wheel speed: %f", sys.wheel.vel);
+                //ESP_LOGI(TAG, "sys vel: %f", sys.status.vel);
+                smooth_damp(sys.wheel.vel, &smooth_vel, &smooth_acc);
+                //ESP_LOGI(TAG, "smooth vel: %f", smooth_vel);
+                if (smooth_vel < 0) {
+                    update_velocity((uint32_t)0, &update_pos, &update_vel, &update_acc);
+                    if (update_vel > 0) {
+                        update_vel = -MIN_FEED_RATE;
+                        update_acc = 0;
+                    }
+                    //check if the sign is actually correct, update-vel can overshoot
+                    if (smooth_vel > update_vel) {
+                        sys.status.vel = smooth_vel;
+                        sys.status.acc = smooth_acc;
+                    } else {
+                        sys.status.vel = update_vel;
+                        sys.status.acc = update_acc;
+                    }
+                    //ESP_LOGI(TAG, "smooth vel neg. update-vel: %f", update_vel);
+                    //ESP_LOGI(TAG, "smooth vel neg. smooth-vel: %f", smooth_vel);
+                } else if (smooth_vel > 0) {
+                    update_velocity((uint32_t)(500*STEPS_PER_MM), &update_pos, &update_vel, &update_acc);
+                    if (update_vel < 0) {
+                        update_vel = MIN_FEED_RATE;
+                        update_acc = 0;
+                    }
+                    if (smooth_vel < update_vel) {
+                        sys.status.vel = smooth_vel;
+                        sys.status.acc = smooth_acc;
+                    } else {
+                        sys.status.vel = update_vel;
+                        sys.status.acc = update_acc;
+                    }
+                    //ESP_LOGI(TAG, "smooth vel pos. update-vel: %f", update_vel);
+                    //ESP_LOGI(TAG, "smooth vel pos. smooth-vel: %f", smooth_vel);
+                    //ESP_LOGI(TAG, "whell vel pos. update-vel: %f", update_vel);
+                } else {
+                    sys.status.vel = 0;
+                    sys.status.acc = 0;
+                }
+                //sys.status.vel = smooth_vel;
+                //sys.status.acc = smooth_acc;
+                //ESP_LOGI(TAG, "update vel: %f", update_vel);
+                //ESP_LOGI(TAG, "vel: %f", sys.status.vel);
+                //sys.status.vel = fmin(update_vel, smooth_vel);
+                symbol_duration = fabs(STEP_MOTOR_RESOLUTION_HZ / (sys.status.vel) / 2);
                 symbol.duration0 = symbol_duration;
                 symbol.level0 = 0;
                 symbol.duration1 = symbol_duration;
                 symbol.level1 = 1;
                 //ESP_LOGI(TAG, "vel: %f", sys.status.vel);
+
+                if (sys.status.pos == 0 && sys.status.vel < 0) {
+                    sys.status.vel = 0;
+                    sys.status.acc = 0;
+                } else if (sys.status.pos == (uint32_t)(500*STEPS_PER_MM) && sys.status.vel > 0) {
+                    ESP_LOGI(TAG, "heree we go");
+                    sys.status.vel = 0;
+                    sys.status.acc = 0;
+                }
+                // if(sys.status.vel < MIN_FEED_RATE  && sys.status.vel > 0) {
+                //     sys.status.vel = MIN_FEED_RATE;
+                // } else if (sys.status.vel > -MIN_FEED_RATE && sys.status.vel < 0) {
+                //     sys.status.vel = -MIN_FEED_RATE;
+                // }
                 if (sys.status.vel > 0) {
                     sys.status.pos += 1;
-                } else {
+                } else if (sys.status.vel < 0){
                     sys.status.pos -= 1;
                 }
                 if(sys.status.vel * sys.prev_status.vel < 0) {
@@ -144,7 +231,9 @@ void app_main(void)
                         vTaskDelay(pdMS_TO_TICKS(200));
                     } 
                 } 
-                rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
+                if (sys.status.vel != 0) {
+                    rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
+                }
             }
             set_state(STATE_IDLE);
             motor_enabler(false);

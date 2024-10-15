@@ -8,7 +8,7 @@
 #define STEPS_PER_MM                53.3333333
 #define MAX_FEED_RATE               200 //mm/s
 #define MAX_ACCEL                   800 //mm/s^2
-#define INITIAL_VELOCITY            10  //mm/s
+#define INITIAL_VELOCITY            2  //mm/s
 #define MIN_FEED_RATE               50  //mm/s
 //Rmt config
 #define RMT_MEM_BLOCK_SYMBOLS      64
@@ -25,7 +25,7 @@
 
 #define WHEEL_ENCODER_A             12
 #define WHEEL_ENCODER_B             11
-#define WHEEL_TIMER_INTERVAL        100 //miliseconds
+#define WHEEL_TIMER_INTERVAL        400 //miliseconds
 
 #define STATE_ALERT                (1 << 0)
 #define STATE_IDLE                 (1 << 1)
