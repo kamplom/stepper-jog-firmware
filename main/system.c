@@ -59,11 +59,68 @@ void create_rmt_encoder(void) {
     rmt_new_copy_encoder(&copy_encoder_config, &stepper_encoder);
 }
 
+bool string_is_empty(const char *str) {
+    return str == NULL || str[0] = '\0';
+}
+
 
 //migrate atoi to strtol, then convert to steps and then convert to int
 //Implement default values as half of the max when no value is provided
 void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t *aVal, bool *is_incremental) {
     char *copy = strdup(command);  // Make a copy of the command to avoid modifying the original
+    if(!string_is_empty(copy)) {
+        if (copy[0] == JOG_CANCEL_COMMAND) {
+            // cancel jog, controlled manner
+        } else if (copy[0] == '?') {
+            // dump status
+        } else if (copy[0] == '$') {
+            if (copy[1] == '$') {
+                if(copy[2] == '\0'){
+                    //dump all settings
+                } else {
+                    //it contains a number, dump that one
+                }
+            } else {
+                //if its a number + = set setting
+            }
+        } else if (copy[0] == 'J') {
+            if (copy[1] == '=') {
+                if (copy[2] == 'X') {
+                    //jog command 
+                    char *token;
+                    char *endptr;
+                    // Initialize the is_incremental flag to false (default to absolute movement)
+                    *is_incremental = false;
+                    // Find the 'X' value
+                    token = strchr(copy, 'X');
+                    if (token != NULL) {
+                        // Check for '+' or '-' immediately after 'X'
+                        if (token[1] == '+' || token[1] == '-') {
+                            *is_incremental = true;
+                        }
+                        *xVal = strtof(token + 1, &endptr) * STEPS_PER_MM;  // Convert the number after 'X' to float
+                    } else {
+                        *xVal = 0;
+                    }
+                    sys.target.pos = *xVal;
+                    // Find the 'F' value
+                    token = strchr(copy, 'F');
+                    if (token != NULL) {
+                        *fVal = strtof(token + 1, &endptr) * STEPS_PER_MM;  // Convert the number after 'F' to float
+                    } else {
+                        *fVal = MAX_FEED_RATE * STEPS_PER_MM / 2;
+                    }
+                    // Find the 'A' value
+                    token = strchr(copy, 'A');
+                    if (token != NULL) {
+                        *aVal = strtof(token + 1, &endptr) * STEPS_PER_MM;  // Convert the number after 'A' to float
+                    } else {
+                        *aVal = MAX_ACCEL * STEPS_PER_MM / 2;
+                    }
+                }
+            }
+        }
+    }
     char *token;
     char *endptr;
     // Initialize the is_incremental flag to false (default to absolute movement)

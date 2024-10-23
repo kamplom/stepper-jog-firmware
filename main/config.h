@@ -8,8 +8,12 @@
 #define STEPS_PER_MM                53.3333333
 #define MAX_FEED_RATE               200 //mm/s
 #define MAX_ACCEL                   800 //mm/s^2
+#define MIN_ACCEL                   0
 #define INITIAL_VELOCITY            2  //mm/s
 #define MIN_FEED_RATE               50  //mm/s
+#define MIN_POS_LIMIT               0
+#define MAX_POS_LIMIT               1000
+#define INVERT_DIRECTION            false
 //Rmt config
 #define RMT_MEM_BLOCK_SYMBOLS      64
 #define RMT_TRANS_QUEUE_DEPTH      1
@@ -22,10 +26,12 @@
 #define HOMING_FAST_SPEED           100
 #define HOMING_SLOW_SPEED           25
 #define HOMING_RETRACTION_DISTANCE  2 //mm
+#define HOMING_DIRECTION            false
 
 #define WHEEL_ENCODER_A             12
 #define WHEEL_ENCODER_B             11
 #define WHEEL_TIMER_INTERVAL        400 //miliseconds
+#define WHEEL_TIMER_ACTIVATE        true
 
 #define STATE_ALERT                (1 << 0)
 #define STATE_IDLE                 (1 << 1)

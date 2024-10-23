@@ -17,7 +17,12 @@
 			"freertos.h": "c",
 			"random": "c",
 			"*.tcc": "c",
-			"typeinfo": "c"
+			"typeinfo": "c",
+			"pulse_cnt.h": "c",
+			"timer.h": "c",
+			"cstring": "c",
+			"variant": "c",
+			"*.inc": "c"
 		}
 	}
 }

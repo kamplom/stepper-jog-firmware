@@ -32,15 +32,12 @@ typedef struct {
 } wheel_state_t;
 
 typedef struct system {
-    bool position_lost;
-    uint32_t position;
     physical_state_t status;
     physical_state_t prev_status;
     physical_target_t target;
     uint8_t state;
     wheel_state_t wheel;    
 } system_t;
-
 
 typedef struct {
     RingbufHandle_t buff1;
