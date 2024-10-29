@@ -14,6 +14,7 @@
 #define MIN_POS_LIMIT               0
 #define MAX_POS_LIMIT               1000
 #define INVERT_DIRECTION            false
+#define SMOOTHTIME                  0.4
 //Rmt config
 #define RMT_MEM_BLOCK_SYMBOLS      64
 #define RMT_TRANS_QUEUE_DEPTH      1

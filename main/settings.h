@@ -36,6 +36,8 @@ typedef enum {
     //comands
     Setting_JogCancelCmd = 60,
     Setting_HomingCmd = 61,
+    //damper
+    Setting_SmoothTime = 70
 } setting_id_t;
 
 typedef enum  {
@@ -95,6 +97,10 @@ typedef struct {
     char homing;
 } cmd_settings_t;
 
+typedef struct  {
+    uint32_t smoothTime;
+} damper_settings_t;
+
 // Struct that stores the settings. Used at runtime, loads values either from defaults or nvs
 // Any spatial unit must be steps.
 // Temporal units may be different
@@ -106,6 +112,7 @@ typedef struct {
     rmt_settings_t rmt;
     wheel_settings_t wheel;
     cmd_settings_t cmd;
+    damper_settings_t damper;
 } settings_t;
 
 typedef struct setting_detail {

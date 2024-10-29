@@ -49,6 +49,8 @@ const settings_t settings_defaults = {
     //cmd
     .cmd.jog_cancel = JOG_CANCEL_COMMAND,
     .cmd.homing = HOMING_COMMAND,
+    //damper
+    .damper.smoothTime = SMOOTHTIME
 };
 
 
@@ -78,7 +80,8 @@ const setting_detail_t setting_detail[] = {
     {Setting_WheelTimerActivate, "WheelTimerAct", "bool", Format_Bool, Format_Bool, false, 0, 1, &settings.wheel.timer_activate},
     {Setting_WheelTimerInterval, "WheelTimerInt", "ms", Format_Int, Format_Int, false, 0 , 2000, &settings.wheel.timer_interval},
     {Setting_RmtMemBlockSymbols, "RmtMemBlockSym", "ul", Format_Int, Format_Int, false, 0 , 1000, &settings.rmt.mem_block_sym},
-    {Setting_ChangeDirDelay, "DirDelay", "ms", Format_Int, Format_Int, false, 0 , 2000, &settings.motion.dir_delay}
+    {Setting_ChangeDirDelay, "DirDelay", "ms", Format_Int, Format_Int, false, 0 , 2000, &settings.motion.dir_delay},
+    {Setting_SmoothTime, "SmoothTime", "ms", Format_Int, Format_Int, false, 0, 2000, &settings.damper.smoothTime}
 };
 
 uint32_t N_settings = sizeof(setting_detail)/sizeof(setting_detail[0]);
