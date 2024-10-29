@@ -15,9 +15,10 @@
 #define CW          true
 typedef struct {
     uint32_t pos;
-    float vel;
-    float acc;
-    float jerk;
+    uint32_t vel;
+    uint32_t acc;
+    uint32_t jerk;
+    bool dir;
 } physical_state_t;
 
 typedef struct {
@@ -64,3 +65,12 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
 void homing(void);
 bool set_state(uint8_t state);
 bool motor_enabler(bool action);
+
+void mm_to_steps(float *mm, uint32_t *steps);
+float steps_to_mm(uint32_t steps);
+
+bool str_to_u32(char *str, uint32_t *out);
+bool str_to_float(char *str, float *out);
+
+void invert_motor_direction(void);
+void set_motor_direction(bool dir);

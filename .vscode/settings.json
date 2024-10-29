@@ -23,5 +23,5 @@
         "uart.h": "c",
         "string.h": "c"
     },
-    "idf.flashType": "JTAG"
+    "idf.flashType": "UART"
 }

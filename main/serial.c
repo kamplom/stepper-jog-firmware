@@ -5,6 +5,7 @@
 // include modules
 #include "system.h"
 #include "config.h"
+#include "settings.h"
 static const char *TAG = "Serial";
 
 static void uart_event_task(void *pvParameters)
@@ -73,19 +74,8 @@ static void uart_event_task(void *pvParameters)
                     char* pat = (char*)malloc(2);
                     bzero(pat, 2);
                     uart_read_bytes(UART_SEL_NUM, pat, 1, 100 / portTICK_PERIOD_MS);
-                    if (strcmp(dtmp, EMERGENCY_STOP_COMMAND) == 0) {
-                        // kill rmt and disable stepper
-                        sys.state = STATE_ALERT;
-                    } else if (strcmp(dtmp, JOG_CANCEL_COMMAND) == 0) {
-                        // set target to position + distance needed to decelerate
-
-                    } else if (strcmp(dtmp, HOMING_COMMAND) == 0) {
-                        // set state to homing iff we are either idle or alert
-                        set_state(STATE_HOMING);
-                    } else {
                         // command is of the $ type, parse it.
-                        parse_command(dtmp, &sys.target.pos, &sys.target.vel, &sys.target.acc, &sys.target.is_incremental);
-                    }
+                    parse_command(dtmp, &sys.target.pos, &sys.target.vel, &sys.target.acc, &sys.target.is_incremental);
                 }
                 break;
             //Others

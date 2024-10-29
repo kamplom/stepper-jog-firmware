@@ -17,9 +17,9 @@
 //Rmt config
 #define RMT_MEM_BLOCK_SYMBOLS      64
 #define RMT_TRANS_QUEUE_DEPTH      1
-#define EMERGENCY_STOP_COMMAND     "emergency"
-#define JOG_CANCEL_COMMAND         "jog-cancel"
-#define HOMING_COMMAND             "h"
+#define EMERGENCY_STOP_COMMAND     'e'
+#define JOG_CANCEL_COMMAND         'j'
+#define HOMING_COMMAND             'h'
 #define EOL_COMMAND                "endofline"
 #define EOLR_COMMAND               "return/r"
 
@@ -40,6 +40,7 @@
 #define STATE_WHEEL                (1 << 4)
 
 #define ENABLE_DELAY             250 //ms
+#define CHANGE_DIR_DELAY         250 //ms
 #define STEP_MOTOR_GPIO_EN       6
 #define STEP_MOTOR_GPIO_DIR      5
 #define STEP_MOTOR_GPIO_STEP     4

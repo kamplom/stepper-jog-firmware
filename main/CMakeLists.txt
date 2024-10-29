@@ -1,2 +1,2 @@
-idf_component_register(SRCS "settings.c" "wheel.c" "jogging.c" "serial.c" "gpio.c" "system.c" "main.c"
+idf_component_register(SRCS "nvs_f.c" "settings.c" "wheel.c" "jogging.c" "serial.c" "gpio.c" "system.c" "main.c"
                     INCLUDE_DIRS ".")

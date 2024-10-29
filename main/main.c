@@ -14,6 +14,8 @@
 #include "system.h"
 #include "serial.h"
 #include "wheel.h"
+#include "settings.h"
+#include "nvs_f.h"
 
 static const char *TAG = "main";
 
@@ -58,6 +60,9 @@ void app_main(void)
     // main loop. If target is not pos exectues whatever update_velocity tells it to.
     pcnt_init();
     wheel_timer_init();
+
+    nvs_init();
+    settings_init();
     
     while(1) {
         // if we are in alert we will keep falling into here
@@ -80,9 +85,9 @@ void app_main(void)
                 motor_enabler(true);
                 // Set initial velocity and acceleration
                 if(sys.target.pos > sys.status.pos) {
-                    sys.status.vel = STEPS_PER_MM*INITIAL_VELOCITY;
+                    sys.status.vel = settings.motion.vel.min;
                 } else {
-                    sys.status.vel = -STEPS_PER_MM*INITIAL_VELOCITY;
+                    sys.status.vel = -settings.motion.vel.min;
                 }
                 sys.status.acc = 0;
                 iterations = 0;
@@ -90,7 +95,7 @@ void app_main(void)
                 ESP_LOGI(TAG, "Jogging to %"PRIu32" from %"PRIu32, sys.target.pos, sys.status.pos);
                 while (sys.target.pos != sys.status.pos) {
                     // send symobl
-                    symbol_duration = fabs(STEP_MOTOR_RESOLUTION_HZ / sys.status.vel / 2);
+                    symbol_duration = fabs(settings.rmt.motor_resolution / sys.status.vel / 2);
                     symbol.duration0 = symbol_duration;
                     symbol.level0 = 0;
                     symbol.duration1 = symbol_duration;

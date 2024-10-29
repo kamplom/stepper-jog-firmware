@@ -6,6 +6,7 @@
 // Include modules
 #include "system.h"
 #include "config.h"
+#include "settings.h"
 
 static const char *TAG = "Jogging";
 
@@ -32,7 +33,7 @@ void update_velocity(uint32_t target, uint32_t *pos_ptr, float *vel_ptr, float *
     float prev_acc = acc;
 
     // Clamp maximum speed
-    float maxChange = MAX_FEED_RATE * STEPS_PER_MM * smoothTime;
+    float maxChange = settings.motion.vel.max * smoothTime;
     change = fmax(-maxChange, fmin(change, maxChange));
     target = pos - change;
     
@@ -72,20 +73,14 @@ void update_velocity(uint32_t target, uint32_t *pos_ptr, float *vel_ptr, float *
     // increment system position
     if (vel > 0) {
         pos += 1;
-        gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_CLOCKWISE);
+        set_motor_direction(settings.motion.dir);
     } else {
         pos -= 1;
-        gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
+        set_motor_direction(!settings.motion.dir);
     }
 
     if(vel * prev_vel < 0) {
-        if(vel > 0) {
-            gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_CLOCKWISE);
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        } else {
-            gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        } 
+        invert_motor_direction(); 
     }
 
     *(vel_ptr) = vel;
