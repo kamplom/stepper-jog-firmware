@@ -13,45 +13,7 @@ static const char *TAG = "Settings";
 settings_t settings;
 
 
-const settings_t settings_defaults = {
-    .settings_modified = false,
-    //motion
-    .motion.steps_mm = STEPS_PER_MM,
-    .motion.pos.min = MIN_POS_LIMIT,
-    .motion.pos.max = MAX_POS_LIMIT,
-    .motion.vel.min = MIN_FEED_RATE,
-    .motion.vel.max = MAX_FEED_RATE,
-    .motion.acc.max = MAX_ACCEL,
-    .motion.acc.max = MIN_ACCEL,
-    .motion.dir = INVERT_DIRECTION,
-    .motion.enable_delay = ENABLE_DELAY,
-    .motion.dir_delay = CHANGE_DIR_DELAY,
-    // homing
-    .homing.direction = HOMING_DIRECTION,
-    .homing.fast_vel = HOMING_FAST_SPEED,
-    .homing.slow_vel = HOMING_SLOW_SPEED,
-    .homing.retraction = HOMING_RETRACTION_DISTANCE,
-    //gpio
-    .gpio.limit_max = LIMIT_SWITCH_MAX_GPIO,
-    .gpio.limit_min = LIMIT_SWITCH_MIN_GPIO,
-    .gpio.motor_dir = STEP_MOTOR_GPIO_DIR,
-    .gpio.motor_en = STEP_MOTOR_GPIO_EN,
-    .gpio.motor_step = STEP_MOTOR_GPIO_STEP,
-    .gpio.wheel_A = WHEEL_ENCODER_A,
-    .gpio.wheel_B = WHEEL_ENCODER_B,
-    //rmt
-    .rmt.motor_resolution = STEP_MOTOR_RESOLUTION_HZ,
-    .rmt.queue_depth = RMT_TRANS_QUEUE_DEPTH,
-    .rmt.mem_block_sym = RMT_MEM_BLOCK_SYMBOLS,
-    //wheel
-    .wheel.timer_activate = WHEEL_TIMER_ACTIVATE,
-    .wheel.timer_interval = WHEEL_TIMER_INTERVAL,
-    //cmd
-    .cmd.jog_cancel = JOG_CANCEL_COMMAND,
-    .cmd.homing = HOMING_COMMAND,
-    //damper
-    .damper.smoothTime = SMOOTHTIME
-};
+
 
 
 const setting_detail_t setting_detail[] = {
@@ -252,6 +214,47 @@ bool set_setting(uint32_t id, char *str_value) {
 
 void settings_init(void) {
     // set settings to defaults
+    settings.motion.steps_mm = STEPS_PER_MM;
+    nvs_read_setting(Setting_Stepsmm);
+    const settings_t settings_defaults = {
+        .settings_modified = false,
+        //motion
+        .motion.steps_mm = STEPS_PER_MM,
+        .motion.pos.min = MIN_POS_LIMIT * settings.motion.steps_mm,
+        .motion.pos.max = MAX_POS_LIMIT * settings.motion.steps_mm,
+        .motion.vel.min = MIN_FEED_RATE * settings.motion.steps_mm,
+        .motion.vel.max = MAX_FEED_RATE * settings.motion.steps_mm,
+        .motion.acc.max = MAX_ACCEL * settings.motion.steps_mm,
+        .motion.acc.max = MIN_ACCEL * settings.motion.steps_mm,
+        .motion.dir = INVERT_DIRECTION,
+        .motion.enable_delay = ENABLE_DELAY,
+        .motion.dir_delay = CHANGE_DIR_DELAY,
+        // homing
+        .homing.direction = HOMING_DIRECTION,
+        .homing.fast_vel = HOMING_FAST_SPEED * settings.motion.steps_mm,
+        .homing.slow_vel = HOMING_SLOW_SPEED * settings.motion.steps_mm,
+        .homing.retraction = HOMING_RETRACTION_DISTANCE * settings.motion.steps_mm,
+        //gpio
+        .gpio.limit_max = LIMIT_SWITCH_MAX_GPIO,
+        .gpio.limit_min = LIMIT_SWITCH_MIN_GPIO,
+        .gpio.motor_dir = STEP_MOTOR_GPIO_DIR,
+        .gpio.motor_en = STEP_MOTOR_GPIO_EN,
+        .gpio.motor_step = STEP_MOTOR_GPIO_STEP,
+        .gpio.wheel_A = WHEEL_ENCODER_A,
+        .gpio.wheel_B = WHEEL_ENCODER_B,
+        //rmt
+        .rmt.motor_resolution = STEP_MOTOR_RESOLUTION_HZ,
+        .rmt.queue_depth = RMT_TRANS_QUEUE_DEPTH,
+        .rmt.mem_block_sym = RMT_MEM_BLOCK_SYMBOLS,
+        //wheel
+        .wheel.timer_activate = WHEEL_TIMER_ACTIVATE,
+        .wheel.timer_interval = WHEEL_TIMER_INTERVAL,
+        //cmd
+        .cmd.jog_cancel = JOG_CANCEL_COMMAND,
+        .cmd.homing = HOMING_COMMAND,
+        //damper
+        .damper.smoothTime = SMOOTHTIME
+    };
     settings = settings_defaults;
     ESP_LOGD(TAG, "stepsmm: %f", settings.motion.steps_mm);
     settings.motion.fixedp_steps_mm = float_to_fixed(settings.motion.steps_mm);

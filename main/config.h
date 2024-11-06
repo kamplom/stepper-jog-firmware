@@ -10,11 +10,11 @@
 #define MAX_ACCEL                   800 //mm/s^2
 #define MIN_ACCEL                   0
 #define INITIAL_VELOCITY            2  //mm/s
-#define MIN_FEED_RATE               50  //mm/s
+#define MIN_FEED_RATE               1  //mm/s
 #define MIN_POS_LIMIT               0
-#define MAX_POS_LIMIT               1000
+#define MAX_POS_LIMIT               1300
 #define INVERT_DIRECTION            false
-#define SMOOTHTIME                  0.4
+#define SMOOTHTIME                  400
 //Rmt config
 #define RMT_MEM_BLOCK_SYMBOLS      64
 #define RMT_TRANS_QUEUE_DEPTH      1
@@ -24,8 +24,8 @@
 #define EOL_COMMAND                "endofline"
 #define EOLR_COMMAND               "return/r"
 
-#define HOMING_FAST_SPEED           100
-#define HOMING_SLOW_SPEED           25
+#define HOMING_FAST_SPEED           25
+#define HOMING_SLOW_SPEED           5
 #define HOMING_RETRACTION_DISTANCE  2 //mm
 #define HOMING_DIRECTION            false
 
@@ -40,7 +40,7 @@
 #define STATE_HOMING               (1 << 3)
 #define STATE_WHEEL                (1 << 4)
 
-#define ENABLE_DELAY             250 //ms
+#define ENABLE_DELAY             650 //ms
 #define CHANGE_DIR_DELAY         250 //ms
 #define STEP_MOTOR_GPIO_EN       6
 #define STEP_MOTOR_GPIO_DIR      5

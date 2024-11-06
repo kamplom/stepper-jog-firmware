@@ -15,7 +15,7 @@
 #define CW          true
 typedef struct {
     uint32_t pos;
-    uint32_t vel;
+    int32_t vel;
     uint32_t acc;
     uint32_t jerk;
     bool dir;

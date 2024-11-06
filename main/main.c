@@ -39,6 +39,7 @@ void app_main(void)
     };
     ESP_ERROR_CHECK(gpio_config(&stops_gpio_config));
     motor_enabler(false);
+    settings_init();
     //end of temporal
     // init rmt channel and encoder
     create_rmt_channel();
@@ -56,13 +57,14 @@ void app_main(void)
     symbol_duration = 0;
     int iterations = 0;
     rmt_symbol_word_t symbol;
+    symbol.level0 = 0;
+    symbol.level1 = 1;
     
     // main loop. If target is not pos exectues whatever update_velocity tells it to.
     pcnt_init();
-    wheel_timer_init();
+    //wheel_timer_init();
 
     nvs_init();
-    settings_init();
     
     while(1) {
         // if we are in alert we will keep falling into here
@@ -77,6 +79,7 @@ void app_main(void)
             ESP_LOGI(TAG, "Ended homing sequence");
             motor_enabler(false);
         } else if (sys.state & STATE_JOGGING) {
+            ESP_LOGI(TAG, "state: jogging");
             // exit the inner while loop when 
             // we might need to jog
             if (sys.target.pos != sys.status.pos) {
@@ -89,21 +92,28 @@ void app_main(void)
                 } else {
                     sys.status.vel = -settings.motion.vel.min;
                 }
+                uint32_t aux_pos = sys.status.pos;
+                int32_t aux_vel = sys.status.vel;
                 sys.status.acc = 0;
                 iterations = 0;
                 // keep doing steps until we reach the desired position
                 ESP_LOGI(TAG, "Jogging to %"PRIu32" from %"PRIu32, sys.target.pos, sys.status.pos);
                 while (sys.target.pos != sys.status.pos) {
                     // send symobl
-                    symbol_duration = fabs(settings.rmt.motor_resolution / sys.status.vel / 2);
+                    symbol_duration = fabs(settings.rmt.motor_resolution / (float)sys.status.vel / 2);
+                    //ESP_LOGI(TAG, "symbol duration: %"PRIu32, symbol_duration);
                     symbol.duration0 = symbol_duration;
-                    symbol.level0 = 0;
                     symbol.duration1 = symbol_duration;
-                    symbol.level1 = 1;
                     rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
                     //calc next symbol, it will increase position
-                    update_velocity(sys.target.pos, &sys.status.pos, &sys.status.vel, &sys.status.acc);
-                    ESP_LOGI(TAG, "vel: %f", sys.status.vel);
+                    update_velocity_exact(sys.target.pos, &aux_pos, &aux_vel);
+                    //ESP_LOGI(TAG, "aux_pos: %"PRIu32, aux_pos);
+                    //ESP_LOGI(TAG, "aux_vel: %"PRIi32, aux_vel);
+                    update_velocity(aux_pos, &sys.status.pos, &sys.status.vel);
+                    //ESP_LOGI(TAG, "sys.status.pos: %"PRIu32, sys.status.pos);
+                    //ESP_LOGI(TAG, "sys.status.vel: %"PRIi32, sys.status.vel);
+                    //vTaskDelay(pdMS_TO_TICKS(1000));
+                    //ESP_LOGI(TAG, "vel: %"PRIi32, sys.status.vel);
                     //if (iterations == 15000) {
                     //    sys.target.pos = 0;
                     //}
@@ -126,7 +136,7 @@ void app_main(void)
             float smooth_vel = sys.status.vel;
             float smooth_acc = sys.status.acc;
             uint32_t smooth_pos = sys.status.pos;
-            float update_vel = sys.status.vel;
+            int32_t update_vel = sys.status.vel;
             uint32_t update_pos = sys.status.pos;
             float update_acc = sys.status.acc;
             //set dir and st v to zero
@@ -162,7 +172,7 @@ void app_main(void)
                 smooth_damp(sys.wheel.vel, &smooth_vel, &smooth_acc);
                 //ESP_LOGI(TAG, "smooth vel: %f", smooth_vel);
                 if (smooth_vel < 0) {
-                    update_velocity((uint32_t)0, &update_pos, &update_vel, &update_acc);
+                    update_velocity((uint32_t)0, &update_pos, &update_vel);
                     if (update_vel > 0) {
                         update_vel = -MIN_FEED_RATE;
                         update_acc = 0;
@@ -178,7 +188,7 @@ void app_main(void)
                     //ESP_LOGI(TAG, "smooth vel neg. update-vel: %f", update_vel);
                     //ESP_LOGI(TAG, "smooth vel neg. smooth-vel: %f", smooth_vel);
                 } else if (smooth_vel > 0) {
-                    update_velocity((uint32_t)(500*STEPS_PER_MM), &update_pos, &update_vel, &update_acc);
+                    update_velocity((uint32_t)(500*STEPS_PER_MM), &update_pos, &update_vel);
                     if (update_vel < 0) {
                         update_vel = MIN_FEED_RATE;
                         update_acc = 0;
@@ -202,11 +212,9 @@ void app_main(void)
                 //ESP_LOGI(TAG, "update vel: %f", update_vel);
                 //ESP_LOGI(TAG, "vel: %f", sys.status.vel);
                 //sys.status.vel = fmin(update_vel, smooth_vel);
-                symbol_duration = fabs(STEP_MOTOR_RESOLUTION_HZ / (sys.status.vel) / 2);
+                symbol_duration = fabs(STEP_MOTOR_RESOLUTION_HZ / (float)(sys.status.vel) / 2);
                 symbol.duration0 = symbol_duration;
-                symbol.level0 = 0;
                 symbol.duration1 = symbol_duration;
-                symbol.level1 = 1;
                 //ESP_LOGI(TAG, "vel: %f", sys.status.vel);
 
                 if (sys.status.pos == 0 && sys.status.vel < 0) {

@@ -46,7 +46,7 @@ void create_rmt_channel(void)
         .gpio_num = settings.gpio.motor_step,
         .mem_block_symbols = settings.rmt.mem_block_sym,
         .resolution_hz = settings.rmt.motor_resolution,
-        .trans_queue_depth = settings.rmt.queue_depth, // set the number of transactions that can be pending in the background
+        .trans_queue_depth = settings.rmt.queue_depth // set the number of transactions that can be pending in the background
     };
     ESP_LOGI(TAG, "Create RMT TX channel");
     ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &motor_chan));
@@ -59,7 +59,7 @@ void create_rmt_encoder(void) {
     tx_config.loop_count = 0;
     tx_config.flags.queue_nonblocking = false;
     rmt_copy_encoder_config_t copy_encoder_config = {};
-    rmt_new_copy_encoder(&copy_encoder_config, &stepper_encoder);
+    ESP_ERROR_CHECK(rmt_new_copy_encoder(&copy_encoder_config, &stepper_encoder));
 }
 
 bool string_is_empty(const char *str) {
@@ -68,6 +68,7 @@ bool string_is_empty(const char *str) {
 
 void invert_motor_direction(void) {
     gpio_set_level(settings.gpio.motor_dir, !sys.status.dir);
+    sys.status.dir = !sys.status.dir;
     vTaskDelay(pdMS_TO_TICKS(settings.motion.dir_delay));
 }
 
@@ -77,6 +78,7 @@ void set_motor_direction(bool dir) {
     //} else {
     //    gpio_set_level(settings.gpio.motor_dir, !dir);
     //}
+    sys.status.dir = dir;
     gpio_set_level(settings.gpio.motor_dir, dir);
     //vTaskDelay(pdMS_TO_TICKS(settings.motion.dir_delay));
 }
@@ -111,8 +113,7 @@ bool str_to_float(char *str, float *out) {
     *out = number;
     return true;
 }
-//migrate atoi to strtol, then convert to steps and then convert to int
-//Implement default values as half of the max when no value is provided
+//this is fucking unmantainable and unreadable. fix it
 void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t *aVal, bool *is_incremental) {
     char *copy = strdup(command);  // Make a copy of the command to avoid modifying the original
     if(!string_is_empty(copy)) {
@@ -120,7 +121,10 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
             // cancel jog, controlled manner
             return;
         } else if (copy[0] == '?') {
-            // dump status
+            int count;
+            pcnt_unit_get_count(pcnt_unit, &count);
+            int real_pos = (count * 60) / 4000;
+            printf("pos: %d\n", real_pos);
             return;
         } else if (copy[0] == '$') {
             if (copy[1] == '$') {
@@ -135,6 +139,43 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
                     } else {
                         printf("Not a valid id");
                         return;
+                    }
+                }
+            } else if (copy[1] == 'J') {
+                if (copy[2] == '=') {
+                    if (copy[3] == 'X') {
+                        //jog command 
+                        char *token;
+                        char *endptr;
+                        // Initialize the is_incremental flag to false (default to absolute movement)
+                        *is_incremental = false;
+                        // Find the 'X' value
+                        token = strchr(copy, 'X');
+                        if (token != NULL) {
+                            // Check for '+' or '-' immediately after 'X'
+                            if (token[1] == '+' || token[1] == '-') {
+                                *is_incremental = true;
+                            }
+                            *xVal = strtof(token + 1, &endptr) * settings.motion.steps_mm;  // Convert the number after 'X' to float
+                        } else {
+                            *xVal = 0;
+                        }
+                        sys.target.pos = *xVal;
+                        // Find the 'F' value
+                        token = strchr(copy, 'F');
+                        if (token != NULL) {
+                            *fVal = strtof(token + 1, &endptr) * settings.motion.steps_mm;  // Convert the number after 'F' to float
+                        } else {
+                            *fVal = settings.motion.vel.max / 2;
+                        }
+                        // Find the 'A' value
+                        token = strchr(copy, 'A');
+                        if (token != NULL) {
+                            *aVal = strtof(token + 1, &endptr) * settings.motion.steps_mm;  // Convert the number after 'A' to float
+                        } else {
+                            *aVal = MAX_ACCEL * settings.motion.steps_mm / 2;
+                        }
+                        set_state(STATE_JOGGING);
                     }
                 }
             } else {
@@ -153,80 +194,13 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
                     }
                 }
             }
-        } else if (copy[0] == 'J') {
-            if (copy[1] == '=') {
-                if (copy[2] == 'X') {
-                    //jog command 
-                    char *token;
-                    char *endptr;
-                    // Initialize the is_incremental flag to false (default to absolute movement)
-                    *is_incremental = false;
-                    // Find the 'X' value
-                    token = strchr(copy, 'X');
-                    if (token != NULL) {
-                        // Check for '+' or '-' immediately after 'X'
-                        if (token[1] == '+' || token[1] == '-') {
-                            *is_incremental = true;
-                        }
-                        *xVal = strtof(token + 1, &endptr) * settings.motion.steps_mm;  // Convert the number after 'X' to float
-                    } else {
-                        *xVal = 0;
-                    }
-                    sys.target.pos = *xVal;
-                    // Find the 'F' value
-                    token = strchr(copy, 'F');
-                    if (token != NULL) {
-                        *fVal = strtof(token + 1, &endptr) * settings.motion.steps_mm;  // Convert the number after 'F' to float
-                    } else {
-                        *fVal = settings.motion.vel.max / 2;
-                    }
-                    // Find the 'A' value
-                    token = strchr(copy, 'A');
-                    if (token != NULL) {
-                        *aVal = strtof(token + 1, &endptr) * settings.motion.steps_mm;  // Convert the number after 'A' to float
-                    } else {
-                        *aVal = MAX_ACCEL * settings.motion.steps_mm / 2;
-                    }
-                }
-            }
+        } else if (copy[0] == settings.cmd.homing) {
+            sys.state = STATE_HOMING;
         }
     }
-    char *token;
-    char *endptr;
-    // Initialize the is_incremental flag to false (default to absolute movement)
-    *is_incremental = false;
-    // Find the 'X' value
-    token = strchr(copy, 'X');
-    if (token != NULL) {
-        // Check for '+' or '-' immediately after 'X'
-        if (token[1] == '+' || token[1] == '-') {
-            *is_incremental = true;
-        }
-        *xVal = strtof(token + 1, &endptr) * settings.motion.steps_mm;  // Convert the number after 'X' to float
-    } else {
-        *xVal = 0;
-    }
-    sys.target.pos = *xVal;
-    // Find the 'F' value
-    token = strchr(copy, 'F');
-    if (token != NULL) {
-        *fVal = strtof(token + 1, &endptr) * settings.motion.steps_mm;  // Convert the number after 'F' to float
-    } else {
-        *fVal = MAX_FEED_RATE * settings.motion.steps_mm / 2;
-    }
-
-    // Find the 'A' value
-    token = strchr(copy, 'A');
-    if (token != NULL) {
-        *aVal = strtof(token + 1, &endptr) * settings.motion.steps_mm;  // Convert the number after 'A' to float
-    } else {
-        *aVal = MAX_ACCEL * settings.motion.steps_mm / 2;
-    }
-    set_state(STATE_JOGGING);
-    free(copy);  // Free the copied string
 }
 
-void homing(void){
+void homing(void) {
     uint32_t symbol_duration = 0;
     rmt_symbol_word_t symbol;
     int phase = 0;
@@ -235,38 +209,43 @@ void homing(void){
     symbol.level0 = 0;
     symbol.duration1 = symbol_duration;
     symbol.level1 = 1;
-    gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
-    
+
+    if (settings.homing.direction) {
+        set_motor_direction(!settings.motion.dir);
+    } else {
+        set_motor_direction(!settings.motion.dir); 
+    }
+
     while(1) {
         if (phase == 0) {
             if(gpio_get_level(settings.gpio.limit_min)){
                 rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
             } else {
                 phase = 1;
-                gpio_set_level(settings.gpio.motor_dir, STEP_MOTOR_SPIN_DIR_CLOCKWISE);       
+                invert_motor_direction();
+                symbol_duration = settings.rmt.motor_resolution / settings.homing.slow_vel / 2;
+                symbol.duration0 = symbol_duration;
+                symbol.duration1 = symbol_duration;
+
             }
         } else if (phase == 1) {
             for (int i = 0; i < settings.homing.retraction; i++) {
                 rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
             }
             phase = 2;
-            gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
+            invert_motor_direction();
             symbol_duration = settings.rmt.motor_resolution / settings.homing.slow_vel / 2;
             symbol.duration0 = symbol_duration;
-            symbol.level0 = 0;
             symbol.duration1 = symbol_duration;
-            symbol.level1 = 1;
         } else if (phase == 2) {
             if(gpio_get_level(LIMIT_SWITCH_MIN_GPIO)) {
                 rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
             } else {
                 phase = 3;
-                gpio_set_level(STEP_MOTOR_GPIO_DIR, STEP_MOTOR_SPIN_DIR_CLOCKWISE);
-                symbol_duration = settings.rmt.motor_resolution / settings.homing.fast_vel / 2;
+                invert_motor_direction();
+                symbol_duration = settings.rmt.motor_resolution / settings.homing.slow_vel / 2;
                 symbol.duration0 = symbol_duration;
-                symbol.level0 = 0;
                 symbol.duration1 = symbol_duration;
-                symbol.level1 = 1;
             }
         } else if (phase == 3) {
             for (int i = 0; i < settings.homing.retraction; i++) {
@@ -278,6 +257,7 @@ void homing(void){
             sys.status.pos = 0;
             sys.status.vel = 0;
             sys.status.acc = 0;
+            pcnt_unit_clear_count(pcnt_unit);
             return;
         }
     }
