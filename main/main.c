@@ -8,6 +8,8 @@
 #include "driver/gpio.h"
 #include <math.h>
 
+#include "esp_timer.h"
+
 // Inlcude modules
 #include "jogging.h"
 #include "config.h"
@@ -18,6 +20,25 @@
 #include "nvs_f.h"
 
 static const char *TAG = "main";
+
+static void report_timer_callback(void* arg) {
+    int32_t pulse_count;
+    pcnt_unit_get_count(pcnt_unit, &pulse_count);
+    pulse_count = (pulse_count * 60 * 53.3333333) / 4000;
+    printf("%"PRIi32"\n", pulse_count);
+}
+
+void report_timer_init() {
+    const esp_timer_create_args_t report_timer_args = {
+        .callback = &report_timer_callback,
+        .name = "report_timer"
+    };
+
+    esp_timer_handle_t report_timer;
+    ESP_ERROR_CHECK(esp_timer_create(&report_timer_args, &report_timer));
+
+    ESP_ERROR_CHECK(esp_timer_start_periodic(report_timer, 50*1000));
+}
 
 void app_main(void)
 {
@@ -46,6 +67,7 @@ void app_main(void)
     create_rmt_encoder();
 
     init_uart();
+    report_timer_init();
 
     // init sys variables
     sys.target.pos = 0;
@@ -65,7 +87,7 @@ void app_main(void)
     //wheel_timer_init();
 
     nvs_init();
-    
+
     while(1) {
         // if we are in alert we will keep falling into here
         if (sys.state & STATE_ALERT) {
