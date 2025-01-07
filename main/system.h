@@ -34,6 +34,7 @@ typedef struct {
 
 typedef struct system {
     physical_state_t status;
+    physical_state_t real;
     physical_state_t prev_status;
     physical_target_t target;
     uint8_t state;

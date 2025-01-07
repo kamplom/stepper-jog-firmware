@@ -92,13 +92,17 @@ void app_main(void)
                 } else {
                     sys.status.vel = -settings.motion.vel.min;
                 }
-                uint32_t aux_pos = sys.status.pos;
-                int32_t aux_vel = sys.status.vel;
                 sys.status.acc = 0;
                 iterations = 0;
                 // keep doing steps until we reach the desired position
                 ESP_LOGI(TAG, "Jogging to %"PRIu32" from %"PRIu32, sys.target.pos, sys.status.pos);
-                while (sys.target.pos != sys.status.pos) {
+                int counter;
+                pcnt_unit_get_count(pcnt_unit, &counter);
+                sys.real.pos = (counter * 60 * 53.3333333) / 4000;
+                sys.status.pos = sys.real.pos;
+                uint32_t aux_pos = sys.status.pos;
+                int32_t aux_vel = sys.status.vel;
+                while (sys.target.pos - sys.real.pos > 1) {
                     // send symobl
                     symbol_duration = fabs(settings.rmt.motor_resolution / (float)sys.status.vel / 2);
                     //ESP_LOGI(TAG, "symbol duration: %"PRIu32, symbol_duration);
@@ -118,6 +122,9 @@ void app_main(void)
                     //    sys.target.pos = 0;
                     //}
                     iterations += 1;
+                    pcnt_unit_get_count(pcnt_unit, &counter);
+                    sys.real.pos = (counter * 60 * 53.3333333) / 4000;
+                    //ESP_LOGI(TAG, "sys.real.pos: %"PRIu32, sys.real.pos);
                 }
                 sys.status.vel = 0;
                 ESP_LOGI(TAG, "Iterations %d",iterations);
