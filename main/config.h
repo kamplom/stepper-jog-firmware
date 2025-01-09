@@ -6,11 +6,16 @@
 #include "driver/timer.h"
 
 #define STEPS_PER_MM                53.3333333
+
+#define STEPS_PER_REV               2000
+#define PULSES_PER_REV              4000
+#define MM_PER_REV                  60
+
 #define MAX_FEED_RATE               200 //mm/s
 #define MAX_ACCEL                   800 //mm/s^2
 #define MIN_ACCEL                   0
 #define INITIAL_VELOCITY            2  //mm/s
-#define MIN_FEED_RATE               1  //mm/s
+#define MIN_FEED_RATE               5  //mm/s
 #define MIN_POS_LIMIT               0
 #define MAX_POS_LIMIT               1300
 #define INVERT_DIRECTION            false

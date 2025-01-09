@@ -12,38 +12,38 @@ static const char *TAG = "Settings";
 
 settings_t settings;
 
-
-
-
-
 const setting_detail_t setting_detail[] = {
-    // id, key, unit, datatype, user input type, steps_multiply, min_value, max_value, value ptr.
-    {Setting_Stepsmm, "Steps_mm", "N. Steps", Format_Int, Format_Float, false, 1, 500, &settings.motion.fixedp_steps_mm},
-    {Setting_MinPos, "MinPos", "mm", Format_Int, Format_Float, true, 0, 100, &settings.motion.pos.min},
-    {Setting_MaxPos, "MaxPos", "mm", Format_Int, Format_Float, true, 150, 6000, &settings.motion.pos.max},
-    {Setting_MinVel, "MinVel", "mm/s", Format_Int, Format_Float, true, 0.5, 50, &settings.motion.vel.min},
-    {Setting_MaxVel, "MaxVel", "mm/s", Format_Int, Format_Float, true, 100, 1000, &settings.motion.vel.max},
-    {Setting_MinAcc, "MinAcc", "mm/s2", Format_Int, Format_Float, true, 1, 100000000, &settings.motion.acc.min},
-    {Setting_MaxAcc, "MaxAcc", "mm/s2", Format_Int, Format_Float, true, 1, 1000000000, &settings.motion.acc.max},
-    {Setting_EnableDelay, "DelayEN", "ms", Format_Int, Format_Int, false, 0, 1000, &settings.motion.enable_delay},
-    {Setting_InvertDirection, "DirInv", "bool", Format_Bool, Format_Bool, false, 0, 1, &settings.motion.dir},
-    {Setting_HomingFastVelocity, "HomingFast", "mm/s", Format_Int, Format_Float, true, 1, 10000, &settings.homing.fast_vel},
-    {Setting_HomingSlowVelocity, "HomingSlow", "mm/s", Format_Int, Format_Float, true, 1, 1000, &settings.homing.slow_vel},
-    {Setting_HomingRetractionDistance, "HRetraction", "mm", Format_Int, Format_Float, true, 0, 400, &settings.homing.retraction},
-    {Setting_GpioMotorEn, "GpioMotorEn", "pin", Format_Int, Format_Int, false, 0, 100, &settings.gpio.motor_en},
-    {Setting_GpioMotorDir, "GpioMotorDir", "pin", Format_Int, Format_Int, false, 0, 100, &settings.gpio.motor_dir},
-    {Setting_GpioMotorStep, "GpioMotorStep", "pin", Format_Int, Format_Int, false, 0, 100, &settings.gpio.motor_step},
-    {Setting_GpioMinLimit, "GpioMinLim", "pin", Format_Int, Format_Int, false, 0, 100, &settings.gpio.limit_min},
-    {Setting_GpioMaxLimit, "GpioMaxLim", "pin", Format_Int, Format_Int, false, 0, 100, &settings.gpio.limit_max},
-    {Setting_GpioWheelA, "GpioWheelA", "pin", Format_Int, Format_Int, false, 0, 100, &settings.gpio.wheel_A},
-    {Setting_GpioWheelB, "GpioWheelB", "pin", Format_Int, Format_Int, false, 0, 100, &settings.gpio.wheel_B},
-    {Setting_RmtStepMotorResolution, "RmtResolution", "hz", Format_Int, Format_Int, false, 1, 100000000, &settings.rmt.motor_resolution},
-    {Setting_RmtQueueDepth, "RmtQueueDepth", "ul", Format_Int, Format_Int, false, 1, 20, &settings.rmt.queue_depth},
-    {Setting_WheelTimerActivate, "WheelTimerAct", "bool", Format_Bool, Format_Bool, false, 0, 1, &settings.wheel.timer_activate},
-    {Setting_WheelTimerInterval, "WheelTimerInt", "ms", Format_Int, Format_Int, false, 0 , 2000, &settings.wheel.timer_interval},
-    {Setting_RmtMemBlockSymbols, "RmtMemBlockSym", "ul", Format_Int, Format_Int, false, 0 , 1000, &settings.rmt.mem_block_sym},
-    {Setting_ChangeDirDelay, "DirDelay", "ms", Format_Int, Format_Int, false, 0 , 2000, &settings.motion.dir_delay},
-    {Setting_SmoothTime, "SmoothTime", "ms", Format_Int, Format_Int, false, 0, 2000, &settings.damper.smoothTime}
+    // id                          | key             | unit     | datatype    | input type  | multiply | min      | max        | value pointer
+    {Setting_Stepsmm,              "Steps_mm",       "N. Steps", Format_Int,   Format_Float, false,     1,        500,         &settings.motion.fixedp_steps_mm},
+    {Setting_MinPos,               "MinPos",         "mm",       Format_Int,   Format_Float, true,      0,        100,         &settings.motion.pos.min},
+    {Setting_MaxPos,               "MaxPos",         "mm",       Format_Int,   Format_Float, true,      150,      6000,        &settings.motion.pos.max},
+    {Setting_MinVel,               "MinVel",         "mm/s",     Format_Int,   Format_Float, true,      0.5,      50,          &settings.motion.vel.min},
+    {Setting_MaxVel,               "MaxVel",         "mm/s",     Format_Int,   Format_Float, true,      100,      1000,        &settings.motion.vel.max},
+    {Setting_MinAcc,               "MinAcc",         "mm/s2",    Format_Int,   Format_Float, true,      1,        100000000,   &settings.motion.acc.min},
+    {Setting_MaxAcc,               "MaxAcc",         "mm/s2",    Format_Int,   Format_Float, true,      1,        1000000000,  &settings.motion.acc.max},
+    {Setting_EnableDelay,          "DelayEN",        "ms",       Format_Int,   Format_Int,   false,     0,        1000,        &settings.motion.enable_delay},
+    {Setting_InvertDirection,      "DirInv",         "bool",     Format_Bool,  Format_Bool,  false,     0,        1,           &settings.motion.dir},
+    {Setting_HomingFastVelocity,   "HomingFast",     "mm/s",     Format_Int,   Format_Float, true,      1,        10000,       &settings.homing.fast_vel},
+    {Setting_HomingSlowVelocity,   "HomingSlow",     "mm/s",     Format_Int,   Format_Float, true,      1,        1000,        &settings.homing.slow_vel},
+    {Setting_HomingRetractionDistance,"HRetraction", "mm",       Format_Int,   Format_Float, true,      0,        400,         &settings.homing.retraction},
+    {Setting_HomingInvertDirection,"DirInv",         "bool",     Format_Bool,  Format_Bool,  false,     0,        1,           &settings.homing.direction},
+    {Setting_GpioMotorEn,          "GpioMotorEn",    "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.motor_en},
+    {Setting_GpioMotorDir,         "GpioMotorDir",   "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.motor_dir},
+    {Setting_GpioMotorStep,        "GpioMotorStep",  "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.motor_step},
+    {Setting_GpioMinLimit,         "GpioMinLim",     "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.limit_min},
+    {Setting_GpioMaxLimit,         "GpioMaxLim",     "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.limit_max},
+    {Setting_GpioWheelA,           "GpioWheelA",     "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.wheel_A},
+    {Setting_GpioWheelB,           "GpioWheelB",     "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.wheel_B},
+    {Setting_RmtStepMotorResolution,"RmtResolution", "hz",       Format_Int,   Format_Int,   false,     1,        100000000,   &settings.rmt.motor_resolution},
+    {Setting_RmtQueueDepth,        "RmtQueueDepth",  "ul",       Format_Int,   Format_Int,   false,     1,        20,          &settings.rmt.queue_depth},
+    {Setting_WheelTimerActivate,   "WheelTimerAct",  "bool",     Format_Bool,  Format_Bool,  false,     0,        1,           &settings.wheel.timer_activate},
+    {Setting_WheelTimerInterval,   "WheelTimerInt",  "ms",       Format_Int,   Format_Int,   false,     0,        2000,        &settings.wheel.timer_interval},
+    {Setting_RmtMemBlockSymbols,   "RmtMemBlockSym", "ul",       Format_Int,   Format_Int,   false,     0,        1000,        &settings.rmt.mem_block_sym},
+    {Setting_ChangeDirDelay,       "DirDelay",       "ms",       Format_Int,   Format_Int,   false,     0,        2000,        &settings.motion.dir_delay},
+    {Setting_SmoothTime,           "SmoothTime",     "ms",       Format_Int,   Format_Int,   false,     0,        2000,        &settings.damper.smoothTime},
+    {Setting_StepsRev,             "StepsRev",       "steps",    Format_Int,   Format_Int,   false,     1,        1000000,     &settings.units.steps_rev},
+    {Setting_PulsesRev,            "PulsesRev",      "pulses",   Format_Int,   Format_Int,   false,     1,        1000000,     &settings.units.pulses_rev},
+    {Setting_mmRev,                "mmRev",          "mm",       Format_Int,   Format_Int,   false,     1,        1000000,     &settings.units.mm_rev}
 };
 
 uint32_t N_settings = sizeof(setting_detail)/sizeof(setting_detail[0]);
@@ -63,6 +63,7 @@ void report_setting_short(uint32_t id) {
     uint32_t index;
     if(!find_setting(id, &index)) {
         printf("Setting not found\n");
+        return;
     }
     switch (setting_detail[index].datatype) {
         case Format_Float:
@@ -253,7 +254,11 @@ void settings_init(void) {
         .cmd.jog_cancel = JOG_CANCEL_COMMAND,
         .cmd.homing = HOMING_COMMAND,
         //damper
-        .damper.smoothTime = SMOOTHTIME
+        .damper.smoothTime = SMOOTHTIME,
+        //units
+        .units.steps_rev = STEPS_PER_REV,
+        .units.pulses_rev = PULSES_PER_REV,
+        .units.mm_rev = MM_PER_REV
     };
     settings = settings_defaults;
     ESP_LOGD(TAG, "stepsmm: %f", settings.motion.steps_mm);
@@ -261,5 +266,7 @@ void settings_init(void) {
     ESP_LOGD(TAG, "fixed stepsmm: %"PRIu32, settings.motion.fixedp_steps_mm);
     ESP_LOGD(TAG, "float again: %f", fixed_to_float(settings.motion.fixedp_steps_mm));
     // load settings from nvs if they exist
+    nvs_init();
     nvs_read_all_settings();
+    nvs_write_all_settings();
 }

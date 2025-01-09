@@ -9,12 +9,12 @@
 
 static const char *TAG = "Jogging";
 
-void update_velocity(uint32_t target, uint32_t *pos_ptr, int32_t *vel_ptr)
+void update_velocity(uint32_t target, int32_t *pos_ptr, int32_t *vel_ptr)
 {
     // Based on Unity SmoothDamp() implementation of the critical 
     // Based on Game Programming Gems 4 Chapter 1.10
     int32_t vel = *(vel_ptr);
-    uint32_t pos = *(pos_ptr);
+    int32_t pos = *(pos_ptr);
 
     
     float deltaTime = fabs(1/(float)vel);
@@ -23,7 +23,7 @@ void update_velocity(uint32_t target, uint32_t *pos_ptr, int32_t *vel_ptr)
     float x = omega * deltaTime;
     float exp = 1.0f / (1.0f + x + 0.48f * x * x + 0.235f * x * x * x);
     float change = (float)pos - (float)target; // floats so the rest result is not unsign
-    uint32_t originalTo = target;
+    int32_t originalTo = target;
      
     target = pos - change;
     int32_t prev_vel = vel;
@@ -59,12 +59,12 @@ void update_velocity(uint32_t target, uint32_t *pos_ptr, int32_t *vel_ptr)
     *(pos_ptr) = pos;
 }
 
-void update_velocity_exact(uint32_t target, uint32_t *pos_ptr, int32_t *vel_ptr)
+void update_velocity_exact(uint32_t target, int32_t *pos_ptr, int32_t *vel_ptr)
 {
     // Based on Unity SmoothDamp() implementation of the critical 
     // Based on Game Programming Gems 4 Chapter 1.10
     int32_t vel = *(vel_ptr);
-    uint32_t pos = *(pos_ptr);
+    int32_t pos = *(pos_ptr);
 
     
     float deltaTime = fabs(1/(float)sys.status.vel);
@@ -82,7 +82,7 @@ void update_velocity_exact(uint32_t target, uint32_t *pos_ptr, int32_t *vel_ptr)
 
     float temp = (vel + omega * change) * deltaTime;
     vel = (int32_t)((vel - omega * temp) * exp);
-    pos = (uint32_t)(target + (change + temp) * exp);
+    pos = (int32_t)(target + (change + temp) * exp);
     
 
     // establish minimum velocity to avoid too slow creep in

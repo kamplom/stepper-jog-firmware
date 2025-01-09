@@ -16,56 +16,23 @@
 #include "wheel.h"
 #include "settings.h"
 #include "nvs_f.h"
+#include "u_convert.h"
 
 static const char *TAG = "main";
 
 void app_main(void)
 {
-    // BEGIN BOOT-TIME SET-UP 
-    //temporal
-    ESP_LOGI(TAG, "Initialize EN + DIR GPIO");
-    gpio_config_t en_dir_gpio_config = {
-        .mode = GPIO_MODE_OUTPUT,
-        .intr_type = GPIO_INTR_DISABLE,
-        .pin_bit_mask = 1ULL << STEP_MOTOR_GPIO_DIR | 1ULL << STEP_MOTOR_GPIO_EN,
-    };
-    ESP_ERROR_CHECK(gpio_config(&en_dir_gpio_config));
-
-
-    gpio_config_t stops_gpio_config = {
-        .mode = GPIO_MODE_INPUT,
-        .intr_type = GPIO_INTR_DISABLE,
-        .pin_bit_mask = 1ULL << LIMIT_SWITCH_MIN_GPIO | 1ULL << LIMIT_SWITCH_MAX_GPIO, 
-    };
-    ESP_ERROR_CHECK(gpio_config(&stops_gpio_config));
-    motor_enabler(false);
-    settings_init();
-    //end of temporal
-    // init rmt channel and encoder
-    create_rmt_channel();
-    create_rmt_encoder();
-
-    init_uart();
-
-    // init sys variables
-    sys.target.pos = 0;
-    sys.status.pos = 0;
-    sys.status.vel = 0;
-    sys.state = STATE_ALERT;
+    start_up_sequence();
     // variables for main loop
     uint32_t symbol_duration;
     symbol_duration = 0;
-    int iterations = 0;
+    uint32_t iterations = 0;
     rmt_symbol_word_t symbol;
     symbol.level0 = 0;
     symbol.level1 = 1;
     
     // main loop. If target is not pos exectues whatever update_velocity tells it to.
-    pcnt_init();
-    //wheel_timer_init();
 
-    nvs_init();
-    
     while(1) {
         // if we are in alert we will keep falling into here
         if (sys.state & STATE_ALERT) {
@@ -83,51 +50,42 @@ void app_main(void)
             // exit the inner while loop when 
             // we might need to jog
             if (sys.target.pos != sys.status.pos) {
-                // Target neq Pos
-                // Enable motor
                 motor_enabler(true);
-                // Set initial velocity and acceleration
                 if(sys.target.pos > sys.status.pos) {
                     sys.status.vel = settings.motion.vel.min;
                 } else {
                     sys.status.vel = -settings.motion.vel.min;
                 }
-                sys.status.acc = 0;
                 iterations = 0;
+
                 // keep doing steps until we reach the desired position
                 ESP_LOGI(TAG, "Jogging to %"PRIu32" from %"PRIu32, sys.target.pos, sys.status.pos);
-                int counter;
-                pcnt_unit_get_count(pcnt_unit, &counter);
-                sys.real.pos = (counter * 60 * 53.3333333) / 4000;
+                pcnt_unit_get_count(pcnt_unit, &sys.real.pos);
                 sys.status.pos = sys.real.pos;
-                uint32_t aux_pos = sys.status.pos;
-                int32_t aux_vel = sys.status.vel;
+                jog_aux.aux.pos = pulses_to_steps(sys.status.pos);
+                jog_aux.aux.vel = pulses_to_steps(sys.status.vel);
+                jog_aux.status.pos = jog_aux.aux.pos;
+                jog_aux.status.vel = jog_aux.aux.vel;
+
+                //loop until we reach the target position. transmit a step each iteration
                 while (sys.target.pos - sys.real.pos > 1) {
-                    // send symobl
-                    symbol_duration = fabs(settings.rmt.motor_resolution / (float)sys.status.vel / 2);
-                    //ESP_LOGI(TAG, "symbol duration: %"PRIu32, symbol_duration);
+                    symbol_duration = (settings.rmt.motor_resolution / (uint32_t)abs(jog_aux.status.vel) / 2);
                     symbol.duration0 = symbol_duration;
                     symbol.duration1 = symbol_duration;
                     rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
                     //calc next symbol, it will increase position
-                    update_velocity_exact(sys.target.pos, &aux_pos, &aux_vel);
-                    //ESP_LOGI(TAG, "aux_pos: %"PRIu32, aux_pos);
-                    //ESP_LOGI(TAG, "aux_vel: %"PRIi32, aux_vel);
-                    update_velocity(aux_pos, &sys.status.pos, &sys.status.vel);
-                    //ESP_LOGI(TAG, "sys.status.pos: %"PRIu32, sys.status.pos);
-                    //ESP_LOGI(TAG, "sys.status.vel: %"PRIi32, sys.status.vel);
-                    //vTaskDelay(pdMS_TO_TICKS(1000));
-                    //ESP_LOGI(TAG, "vel: %"PRIi32, sys.status.vel);
-                    //if (iterations == 15000) {
-                    //    sys.target.pos = 0;
-                    //}
+                    update_velocity_exact(pulses_to_steps_u(sys.target.pos), &jog_aux.aux.pos, &jog_aux.aux.vel);
+                    update_velocity(jog_aux.aux.pos, &jog_aux.status.pos, &jog_aux.status.vel);
+                    
                     iterations += 1;
-                    pcnt_unit_get_count(pcnt_unit, &counter);
-                    sys.real.pos = (counter * 60 * 53.3333333) / 4000;
-                    //ESP_LOGI(TAG, "sys.real.pos: %"PRIu32, sys.real.pos);
+                    pcnt_unit_get_count(pcnt_unit, &sys.real.pos);
+                    //jog_aux.status.pos = pulses_to_steps(sys.real.pos);
+                    sys.status.pos = sys.real.pos;
+                    //ESP_LOGI(TAG,"%"PRIi32" > %"PRIi32, sys.target.pos, sys.real.pos / 4);
                 }
+
                 sys.status.vel = 0;
-                ESP_LOGI(TAG, "Iterations %d",iterations);
+                ESP_LOGI(TAG, "Iterations %lu",iterations);
                 ESP_LOGI(TAG, "sys.target.pos: %"PRIu32, sys.target.pos);
                 set_state(STATE_IDLE);
                 motor_enabler(false);
@@ -137,7 +95,7 @@ void app_main(void)
             }
         } else if (sys.state & STATE_WHEEL) {
             ESP_LOGI(TAG, "pos: %"PRIu32, sys.status.pos);
-            if (!((sys.status.pos == 0 && sys.wheel.vel < 0) || (sys.status.pos == (uint32_t)(500*STEPS_PER_MM) && sys.wheel.vel > 0))) {
+            /* if (!((sys.status.pos == 0 && sys.wheel.vel < 0) || (sys.status.pos == (uint32_t)(500*STEPS_PER_MM) && sys.wheel.vel > 0))) {
                 motor_enabler(true);
             }
             float smooth_vel = sys.status.vel;
@@ -254,7 +212,7 @@ void app_main(void)
                 if (sys.status.vel != 0) {
                     rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
                 }
-            }
+            } */
             set_state(STATE_IDLE);
             motor_enabler(false);
         } else {

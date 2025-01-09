@@ -18,6 +18,7 @@ typedef enum {
     Setting_HomingFastVelocity = 10,
     Setting_HomingSlowVelocity = 11,
     Setting_HomingRetractionDistance = 12,
+    Setting_HomingInvertDirection = 13,
     //GPIO
     Setting_GpioMotorEn = 20,
     Setting_GpioMotorDir = 21,
@@ -37,7 +38,11 @@ typedef enum {
     Setting_JogCancelCmd = 60,
     Setting_HomingCmd = 61,
     //damper
-    Setting_SmoothTime = 70
+    Setting_SmoothTime = 70,
+    //units
+    Setting_StepsRev = 80,
+    Setting_PulsesRev = 81,
+    Setting_mmRev = 82
 } setting_id_t;
 
 typedef enum  {
@@ -101,6 +106,13 @@ typedef struct  {
     uint32_t smoothTime;
 } damper_settings_t;
 
+typedef struct {
+    uint32_t steps_rev;
+    uint32_t pulses_rev;
+    uint32_t mm_rev;
+    uint32_t pulses_steps_ratio;
+} units_settings_t;
+
 // Struct that stores the settings. Used at runtime, loads values either from defaults or nvs
 // Any spatial unit must be steps.
 // Temporal units may be different
@@ -113,6 +125,7 @@ typedef struct {
     wheel_settings_t wheel;
     cmd_settings_t cmd;
     damper_settings_t damper;
+    units_settings_t units;
 } settings_t;
 
 typedef struct setting_detail {
@@ -139,3 +152,4 @@ void settings_init(void);
 
 uint32_t float_to_fixed(float num);
 float fixed_to_float(uint32_t num);
+esp_err_t start_up_sequence();

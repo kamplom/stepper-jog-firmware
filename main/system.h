@@ -14,10 +14,10 @@
 #define CCW         false
 #define CW          true
 typedef struct {
-    uint32_t pos;
+    int32_t pos;
     int32_t vel;
-    uint32_t acc;
-    uint32_t jerk;
+    int32_t acc;
+    int32_t jerk;
     bool dir;
 } physical_state_t;
 
@@ -41,6 +41,11 @@ typedef struct system {
     wheel_state_t wheel;    
 } system_t;
 
+typedef struct jog_aux {
+    physical_state_t status;
+    physical_state_t aux;
+} jog_aux_t;
+
 typedef struct {
     RingbufHandle_t buff1;
     RingbufHandle_t buff2;
@@ -56,6 +61,7 @@ extern rmt_encoder_handle_t stepper_encoder;
 extern QueueHandle_t uart_queue;
 extern RingbufHandle_t line_buff;
 extern pcnt_unit_handle_t pcnt_unit;
+extern jog_aux_t jog_aux;
 
 void create_rmt_channel(void);
 void create_rmt_encoder(void);
@@ -66,9 +72,6 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
 void homing(void);
 bool set_state(uint8_t state);
 bool motor_enabler(bool action);
-
-void mm_to_steps(float *mm, uint32_t *steps);
-float steps_to_mm(uint32_t steps);
 
 bool str_to_u32(char *str, uint32_t *out);
 bool str_to_float(char *str, float *out);
