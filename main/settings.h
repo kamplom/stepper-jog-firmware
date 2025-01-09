@@ -135,8 +135,6 @@ typedef struct setting_detail {
     setting_datatype_t datatype;
     setting_datatype_t uinput_datatype;
     bool steps_multiply;
-    uint32_t min_value;
-    uint32_t max_value;
     void *value;
 } setting_detail_t;
 

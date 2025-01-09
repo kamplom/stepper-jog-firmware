@@ -13,37 +13,37 @@ static const char *TAG = "Settings";
 settings_t settings;
 
 const setting_detail_t setting_detail[] = {
-    // id                          | key             | unit     | datatype    | input type  | multiply | min      | max        | value pointer
-    {Setting_Stepsmm,              "Steps_mm",       "N. Steps", Format_Int,   Format_Float, false,     1,        500,         &settings.motion.fixedp_steps_mm},
-    {Setting_MinPos,               "MinPos",         "mm",       Format_Int,   Format_Float, true,      0,        100,         &settings.motion.pos.min},
-    {Setting_MaxPos,               "MaxPos",         "mm",       Format_Int,   Format_Float, true,      150,      6000,        &settings.motion.pos.max},
-    {Setting_MinVel,               "MinVel",         "mm/s",     Format_Int,   Format_Float, true,      0.5,      50,          &settings.motion.vel.min},
-    {Setting_MaxVel,               "MaxVel",         "mm/s",     Format_Int,   Format_Float, true,      100,      1000,        &settings.motion.vel.max},
-    {Setting_MinAcc,               "MinAcc",         "mm/s2",    Format_Int,   Format_Float, true,      1,        100000000,   &settings.motion.acc.min},
-    {Setting_MaxAcc,               "MaxAcc",         "mm/s2",    Format_Int,   Format_Float, true,      1,        1000000000,  &settings.motion.acc.max},
-    {Setting_EnableDelay,          "DelayEN",        "ms",       Format_Int,   Format_Int,   false,     0,        1000,        &settings.motion.enable_delay},
-    {Setting_InvertDirection,      "DirInv",         "bool",     Format_Bool,  Format_Bool,  false,     0,        1,           &settings.motion.dir},
-    {Setting_HomingFastVelocity,   "HomingFast",     "mm/s",     Format_Int,   Format_Float, true,      1,        10000,       &settings.homing.fast_vel},
-    {Setting_HomingSlowVelocity,   "HomingSlow",     "mm/s",     Format_Int,   Format_Float, true,      1,        1000,        &settings.homing.slow_vel},
-    {Setting_HomingRetractionDistance,"HRetraction", "mm",       Format_Int,   Format_Float, true,      0,        400,         &settings.homing.retraction},
-    {Setting_HomingInvertDirection,"DirInv",         "bool",     Format_Bool,  Format_Bool,  false,     0,        1,           &settings.homing.direction},
-    {Setting_GpioMotorEn,          "GpioMotorEn",    "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.motor_en},
-    {Setting_GpioMotorDir,         "GpioMotorDir",   "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.motor_dir},
-    {Setting_GpioMotorStep,        "GpioMotorStep",  "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.motor_step},
-    {Setting_GpioMinLimit,         "GpioMinLim",     "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.limit_min},
-    {Setting_GpioMaxLimit,         "GpioMaxLim",     "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.limit_max},
-    {Setting_GpioWheelA,           "GpioWheelA",     "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.wheel_A},
-    {Setting_GpioWheelB,           "GpioWheelB",     "pin",      Format_Int,   Format_Int,   false,     0,        100,         &settings.gpio.wheel_B},
-    {Setting_RmtStepMotorResolution,"RmtResolution", "hz",       Format_Int,   Format_Int,   false,     1,        100000000,   &settings.rmt.motor_resolution},
-    {Setting_RmtQueueDepth,        "RmtQueueDepth",  "ul",       Format_Int,   Format_Int,   false,     1,        20,          &settings.rmt.queue_depth},
-    {Setting_WheelTimerActivate,   "WheelTimerAct",  "bool",     Format_Bool,  Format_Bool,  false,     0,        1,           &settings.wheel.timer_activate},
-    {Setting_WheelTimerInterval,   "WheelTimerInt",  "ms",       Format_Int,   Format_Int,   false,     0,        2000,        &settings.wheel.timer_interval},
-    {Setting_RmtMemBlockSymbols,   "RmtMemBlockSym", "ul",       Format_Int,   Format_Int,   false,     0,        1000,        &settings.rmt.mem_block_sym},
-    {Setting_ChangeDirDelay,       "DirDelay",       "ms",       Format_Int,   Format_Int,   false,     0,        2000,        &settings.motion.dir_delay},
-    {Setting_SmoothTime,           "SmoothTime",     "ms",       Format_Int,   Format_Int,   false,     0,        2000,        &settings.damper.smoothTime},
-    {Setting_StepsRev,             "StepsRev",       "steps",    Format_Int,   Format_Int,   false,     1,        1000000,     &settings.units.steps_rev},
-    {Setting_PulsesRev,            "PulsesRev",      "pulses",   Format_Int,   Format_Int,   false,     1,        1000000,     &settings.units.pulses_rev},
-    {Setting_mmRev,                "mmRev",          "mm",       Format_Int,   Format_Int,   false,     1,        1000000,     &settings.units.mm_rev}
+    // id                          | key             | unit      | datatype    | input type  | multiply | value pointer
+    {Setting_Stepsmm,              "Steps_mm",       "N. Steps", Format_Int,   Format_Float, false,     &settings.motion.fixedp_steps_mm},
+    {Setting_MinPos,               "MinPos",         "mm",       Format_Int,   Format_Float, true,      &settings.motion.pos.min},
+    {Setting_MaxPos,               "MaxPos",         "mm",       Format_Int,   Format_Float, true,      &settings.motion.pos.max},
+    {Setting_MinVel,               "MinVel",         "mm/s",     Format_Int,   Format_Float, true,      &settings.motion.vel.min},
+    {Setting_MaxVel,               "MaxVel",         "mm/s",     Format_Int,   Format_Float, true,      &settings.motion.vel.max},
+    {Setting_MinAcc,               "MinAcc",         "mm/s2",    Format_Int,   Format_Float, true,      &settings.motion.acc.min},
+    {Setting_MaxAcc,               "MaxAcc",         "mm/s2",    Format_Int,   Format_Float, true,      &settings.motion.acc.max},
+    {Setting_EnableDelay,          "DelayEN",        "ms",       Format_Int,   Format_Int,   false,     &settings.motion.enable_delay},
+    {Setting_InvertDirection,      "DirInv",         "bool",     Format_Bool,  Format_Bool,  false,     &settings.motion.dir},
+    {Setting_HomingFastVelocity,   "HomingFast",     "mm/s",     Format_Int,   Format_Float, true,      &settings.homing.fast_vel},
+    {Setting_HomingSlowVelocity,   "HomingSlow",     "mm/s",     Format_Int,   Format_Float, true,      &settings.homing.slow_vel},
+    {Setting_HomingRetractionDistance,"HRetraction", "mm",       Format_Int,   Format_Float, true,      &settings.homing.retraction},
+    {Setting_HomingInvertDirection,"DirInv",         "bool",     Format_Bool,  Format_Bool,  false,     &settings.homing.direction},
+    {Setting_GpioMotorEn,          "GpioMotorEn",    "pin",      Format_Int,   Format_Int,   false,     &settings.gpio.motor_en},
+    {Setting_GpioMotorDir,         "GpioMotorDir",   "pin",      Format_Int,   Format_Int,   false,     &settings.gpio.motor_dir},
+    {Setting_GpioMotorStep,        "GpioMotorStep",  "pin",      Format_Int,   Format_Int,   false,     &settings.gpio.motor_step},
+    {Setting_GpioMinLimit,         "GpioMinLim",     "pin",      Format_Int,   Format_Int,   false,     &settings.gpio.limit_min},
+    {Setting_GpioMaxLimit,         "GpioMaxLim",     "pin",      Format_Int,   Format_Int,   false,     &settings.gpio.limit_max},
+    {Setting_GpioWheelA,           "GpioWheelA",     "pin",      Format_Int,   Format_Int,   false,     &settings.gpio.wheel_A},
+    {Setting_GpioWheelB,           "GpioWheelB",     "pin",      Format_Int,   Format_Int,   false,     &settings.gpio.wheel_B},
+    {Setting_RmtStepMotorResolution,"RmtResolution", "hz",       Format_Int,   Format_Int,   false,     &settings.rmt.motor_resolution},
+    {Setting_RmtQueueDepth,        "RmtQueueDepth",  "ul",       Format_Int,   Format_Int,   false,     &settings.rmt.queue_depth},
+    {Setting_WheelTimerActivate,   "WheelTimerAct",  "bool",     Format_Bool,  Format_Bool,  false,     &settings.wheel.timer_activate},
+    {Setting_WheelTimerInterval,   "WheelTimerInt",  "ms",       Format_Int,   Format_Int,   false,     &settings.wheel.timer_interval},
+    {Setting_RmtMemBlockSymbols,   "RmtMemBlockSym", "ul",       Format_Int,   Format_Int,   false,     &settings.rmt.mem_block_sym},
+    {Setting_ChangeDirDelay,       "DirDelay",       "ms",       Format_Int,   Format_Int,   false,     &settings.motion.dir_delay},
+    {Setting_SmoothTime,           "SmoothTime",     "ms",       Format_Int,   Format_Int,   false,     &settings.damper.smoothTime},
+    {Setting_StepsRev,             "StepsRev",       "steps",    Format_Int,   Format_Int,   false,     &settings.units.steps_rev},
+    {Setting_PulsesRev,            "PulsesRev",      "pulses",   Format_Int,   Format_Int,   false,     &settings.units.pulses_rev},
+    {Setting_mmRev,                "mmRev",          "mm",       Format_Int,   Format_Int,   false,     &settings.units.mm_rev}
 };
 
 uint32_t N_settings = sizeof(setting_detail)/sizeof(setting_detail[0]);
@@ -132,14 +132,7 @@ bool set_setting(uint32_t id, char *str_value) {
                 return false;
         }
         ESP_LOGD(TAG, "float: %f", float_value);
-        if (float_value > setting_detail[index].max_value) {
-            printf("Value greater than max\n");
-            return false;
-        }
-        if (float_value < setting_detail[index].min_value) {
-            printf("Value smaller than min\n");
-            return false;
-        }
+        
         ESP_LOGD(TAG, "float: %f", float_value);
         float old_steps_mm = settings.motion.steps_mm;
         settings.motion.steps_mm = float_value;
@@ -187,14 +180,7 @@ bool set_setting(uint32_t id, char *str_value) {
             break;
     }
     // check max and min
-    if (u32_value > setting_detail[index].max_value * settings.motion.steps_mm) {
-        printf("Value greater than max\n");
-        return false;
-    }
-    if (u32_value < setting_detail[index].min_value * settings.motion.steps_mm) {
-        printf("Value smaller than min\n");
-        return false;
-    }
+    
     //write to ram
     switch (setting_detail[index].datatype) {
         case Format_Int:
