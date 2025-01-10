@@ -85,9 +85,9 @@ const setting_detail_t setting_detail[] = {
     {Setting_RmtMemBlockSymbols,   "RmtMemBlockSym", Unit_ul,    Format_Int,   Format_Int,   false,     false,    &settings.rmt.mem_block_sym,       &settings_defaults.rmt.mem_block_sym},
     {Setting_ChangeDirDelay,       "DirDelay",       Unit_ms,    Format_Int,   Format_Int,   false,     false,    &settings.motion.dir_delay,        &settings_defaults.motion.dir_delay},
     {Setting_SmoothTime,           "SmoothTime",     Unit_ms,    Format_Int,   Format_Int,   false,     false,    &settings.damper.smoothTime,       &settings_defaults.damper.smoothTime},
-    {Setting_StepsRev,             "StepsRev",       Unit_step,  Format_Int,   Format_Int,   false,     true,     &settings.units.steps_rev,         &settings_defaults.units.steps_rev},
+    {Setting_StepsRev,             "StepsRev",       Unit_step,  Format_Int,   Format_Int,   false,     false,     &settings.units.steps_rev,         &settings_defaults.units.steps_rev},
     {Setting_PulsesRev,            "PulsesRev",      Unit_pulse, Format_Int,   Format_Int,   false,     true,     &settings.units.pulses_rev,        &settings_defaults.units.pulses_rev},
-    {Setting_mmRev,                "mmRev",          Unit_mm,    Format_Int,   Format_Int,   false,     true,     &settings.units.mm_rev,            &settings_defaults.units.mm_rev}
+    {Setting_mmRev,                "mmRev",          Unit_mm,    Format_Int,   Format_Int,   false,     false,     &settings.units.mm_rev,            &settings_defaults.units.mm_rev}
 };
 
 uint32_t N_settings = sizeof(setting_detail)/sizeof(setting_detail[0]);
@@ -234,10 +234,10 @@ float fixed_to_float(uint32_t num) {
     return ((float)(num >> STEPSMM_SHIFT) + (float)((num & STEPSMM_SHIFT_MASK) / (float)(1 << STEPSMM_SHIFT)));
 }
 
-void recompute_stepsmm(float old_stepsmm) {
+void recompute_stepsmm(uint32_t old) {
     for(uint32_t i = 0; i < N_settings; i++) {
         if(setting_detail[i].recompute) {
-            *(uint32_t*)setting_detail[i].value = (uint32_t)(*(uint32_t *)setting_detail[i].value / old_stepsmm); 
+            *(uint32_t*)setting_detail[i].value = (uint32_t)(*(uint32_t *)setting_detail[i].value * settings.units.pulses_rev / old); 
         }
     }
 }
@@ -249,25 +249,11 @@ bool set_setting(uint32_t id, char *str_value) {
         return false;
     }
     uint32_t u32_value = 0;
-    ESP_LOGD(TAG, "Index: %"PRIu32, index);
-    ESP_LOGD(TAG, "Id: %d", setting_detail[index].id);
-    ESP_LOGD(TAG, "Str_value %s",str_value);
+    uint32_t old_value = 0;
     // only the steps_mm setting has a float datatype inside the settings
     // handle it here to simplify code downstream
-    if(setting_detail[index].id == Setting_Stepsmm) {
-        ESP_LOGD(TAG,"setting is steps per mm");
-        float float_value;
-        if(!str_to_float(str_value, &float_value)) {
-                printf("Value not a valid float\n");
-                return false;
-        }
-        ESP_LOGD(TAG, "float: %f", float_value);
-        
-        ESP_LOGD(TAG, "float: %f", float_value);
-        // write to nvs
-        ESP_LOGD(TAG, "steps per mm correctly");
-        //trigger recompute of all the quantities set on steps
-        return true;
+    if(setting_detail[index].trigger) {
+        old_value = *(uint32_t*)setting_detail[index].value;
     }
     switch (setting_detail[index].uinput_datatype) {
         case Format_Int:
@@ -276,34 +262,24 @@ bool set_setting(uint32_t id, char *str_value) {
                 return false;
             }
             if(setting_detail[index].recompute) {
-                u32_value = (uint32_t)(u32_value);
+                u32_value = mm_to_pulses(u32_value);
             }
             break;
         case Format_Float:
-            float float_value;
-            if(!str_to_float(str_value, &float_value)) {
-                printf("Value not a valid float");
-                return false;
-            }
-            if(setting_detail[index].recompute) {
-                u32_value = (uint32_t)(float_value );
-            }
+            printf("impossible!\n");
             break;
-
         case Format_Bool:
-            if(!str_to_u32(str_value, &u32_value)) {
+            if(!str_to_u32(str_value, &u32_value)){
                 printf("Value: \"%s\" not a valid int\n", str_value);
                 return false;
             }
-            if(!(u32_value == 1 || u32_value == 0)) {
-                printf("value not a bool\n");
-                return false;
+            if(setting_detail[index].recompute) {
+                u32_value = mm_to_pulses(u32_value);
             }
             break;
         default:
             break;
     }
-    
     //write to ram
     switch (setting_detail[index].datatype) {
         case Format_Int:
@@ -313,12 +289,18 @@ bool set_setting(uint32_t id, char *str_value) {
             printf("this will never happen");
             break;
         case Format_Bool:
-            *(bool*)setting_detail[index].value = u32_value;
+            *(bool*)setting_detail[index].value = (bool)u32_value;
         default:
             break;
     }
+
+    if(setting_detail[index].trigger) {
+        recompute_stepsmm(old_value);
+    }
+
     //write to nvs
     nvs_write_setting(setting_detail[index].id);
+    report_setting_long(setting_detail[index].id);
     return true; 
 }
 

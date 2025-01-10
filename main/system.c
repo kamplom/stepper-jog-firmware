@@ -244,16 +244,40 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
                         }
                     }
                 } else {
-                    uint32_t id;
-                    if (str_to_u32(copy + 1, &id))
+                    if (copy[3] == '=')
                     {
-                        report_setting_short(id);
-                        return;
+                        // if its a number + = set setting
+                        char *end_ptr;
+                        uint32_t id = strtoul(copy + 1, &end_ptr, 10);
+                        ESP_LOGD(TAG, "Setting id: %" PRIu32, id);
+                        if (*end_ptr == '=')
+                        {
+                            ESP_LOGD(TAG, "End_ptr is =");
+                            if (set_setting(id, end_ptr + 1))
+                            {
+                                report_setting_short(id);
+                                return;
+                            }
+                            else
+                            {
+                                printf("Setting not set correctly\n");
+                                return;
+                            }
+                        }
                     }
                     else
                     {
-                        printf("Not a valid id\n");
-                        return;
+                        uint32_t id;
+                        if (str_to_u32(copy + 1, &id))
+                        {
+                            report_setting_short(id);
+                            return;
+                        }
+                        else
+                        {
+                            printf("Not a valid id\n");
+                            return;
+                        }
                     }
                 }
             }
