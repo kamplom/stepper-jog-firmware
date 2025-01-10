@@ -53,6 +53,20 @@ typedef enum  {
     Format_Char,
 } setting_datatype_t;
 
+typedef enum {
+    Unit_mm = 0,
+    Unit_step,
+    Unit_pulse,
+    Unit_ms,
+    Unit_mm_s,
+    Unit_ul,
+    Unit_pin,
+    Unit_step_mm,
+    Unit_mm_ss,
+    Unit_bool,
+    Unit_hz,
+} setting_unit_t;
+
 typedef struct  {
     uint32_t max;
     uint32_t min;
@@ -131,10 +145,11 @@ typedef struct {
 typedef struct setting_detail {
     setting_id_t id;
     const char *key;
-    const char *unit;
+    setting_unit_t ipnut_unit;
     setting_datatype_t datatype;
     setting_datatype_t uinput_datatype;
-    bool steps_multiply;
+    bool recompute;
+    bool recompute_trigger;
     void *value;
 } setting_detail_t;
 
