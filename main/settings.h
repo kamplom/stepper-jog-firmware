@@ -157,10 +157,12 @@ extern const setting_detail_t setting_detail[];
 extern uint32_t N_settings;
 
 void report_setting_short(uint32_t id);
-void report_all_short();
+void report_all_short(void);
 bool find_setting(uint32_t id, uint32_t *index);
 bool set_setting(uint32_t id, char *str_value);
 void settings_init(void);
+void report_all_long(void);
+void report_setting_long(uint32_t id);
 
 uint32_t float_to_fixed(float num);
 float fixed_to_float(uint32_t num);

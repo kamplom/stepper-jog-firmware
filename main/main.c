@@ -68,7 +68,7 @@ void app_main(void)
                 jog_aux.status.vel = jog_aux.aux.vel;
 
                 //loop until we reach the target position. transmit a step each iteration
-                while (sys.target.pos - sys.real.pos > 1) {
+                while (abs(sys.real.pos - (int32_t)sys.target.pos) > 1) {
                     symbol_duration = (settings.rmt.motor_resolution / (uint32_t)abs(jog_aux.status.vel) / 2);
                     symbol.duration0 = symbol_duration;
                     symbol.duration1 = symbol_duration;

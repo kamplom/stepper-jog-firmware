@@ -147,7 +147,7 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
             {
                 if (copy[2] == '\0')
                 {
-                    report_all_short();
+                    report_all_long();
                     return;
                 }
                 else
@@ -155,12 +155,12 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
                     uint32_t id;
                     if (str_to_u32(copy + 2, &id))
                     {
-                        report_setting_short(id);
+                        report_setting_long(id);
                         return;
                     }
                     else
                     {
-                        printf("Not a valid id");
+                        printf("Not a valid id\n");
                         return;
                     }
                 }
@@ -216,23 +216,43 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
                     }
                 }
             }
+            else if (copy[1] == '\0')
+            {
+                report_all_short();
+                return;
+            }
             else
             {
-                // if its a number + = set setting
-                char *end_ptr;
-                uint32_t id = strtoul(copy + 1, &end_ptr, 10);
-                ESP_LOGD(TAG, "Setting id: %" PRIu32, id);
-                if (*end_ptr == '=')
+                if (copy[2] == '=')
                 {
-                    ESP_LOGD(TAG, "End_ptr is =");
-                    if (set_setting(id, end_ptr + 1))
+                    // if its a number + = set setting
+                    char *end_ptr;
+                    uint32_t id = strtoul(copy + 1, &end_ptr, 10);
+                    ESP_LOGD(TAG, "Setting id: %" PRIu32, id);
+                    if (*end_ptr == '=')
+                    {
+                        ESP_LOGD(TAG, "End_ptr is =");
+                        if (set_setting(id, end_ptr + 1))
+                        {
+                            report_setting_short(id);
+                            return;
+                        }
+                        else
+                        {
+                            printf("Setting not set correctly\n");
+                            return;
+                        }
+                    }
+                } else {
+                    uint32_t id;
+                    if (str_to_u32(copy + 1, &id))
                     {
                         report_setting_short(id);
                         return;
                     }
                     else
                     {
-                        printf("Setting not set correctly\n");
+                        printf("Not a valid id\n");
                         return;
                     }
                 }

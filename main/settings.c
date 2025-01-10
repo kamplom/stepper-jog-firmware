@@ -124,15 +124,101 @@ void report_setting_short(uint32_t id) {
     }
 }
 
-void report_setting_long(uint32_t id) {
-    uint32_t index;
-    find_setting(id, &index);
+void report_all_short(){
+    for(uint32_t i = 0; i < N_settings; i++) {
+        report_setting_short(setting_detail[i].id);
+    }
 }
 
-void report_all_short() {
-    for (uint32_t i = 0; i < N_settings; i++) {
-        report_setting_short(i);
+char* unit_to_str(setting_unit_t unit) {
+    switch(unit) {
+        case Unit_mm: return "mm";
+        case Unit_mm_s: return "mm/s";
+        case Unit_mm_ss: return "mm/s2";
+        case Unit_bool: return "bool";
+        case Unit_pin: return "pin";
+        case Unit_hz: return "hz";
+        case Unit_ul: return "ul";
+        case Unit_ms: return "ms";
+        case Unit_step: return "step";
+        case Unit_pulse: return "pulse";
+        case Unit_step_mm: return "step/mm";
+        default: return "unknown";
     }
+}
+
+char* format_to_str(setting_datatype_t format) {
+    switch(format) {
+        case Format_Int: return "Int";
+        case Format_Float: return "Float";
+        case Format_Bool: return "Bool";
+        default: return "unknown";
+    }
+}
+void report_setting_long_row(uint32_t id) {
+    uint32_t index;
+    if(!find_setting(id, &index)) {
+        printf("Setting not found\n");
+        return;
+    }
+
+    // Get raw and converted values
+    uint32_t raw_value = *(uint32_t*)setting_detail[index].value;
+    float converted_value = raw_value;
+
+    // Convert based on unit type if recompute is true
+    if (setting_detail[index].recompute) {
+        switch(setting_detail[index].unit) {
+            case Unit_mm:
+                converted_value = pulses_to_mm(raw_value);
+                break;            
+            case Unit_mm_s:
+                converted_value = pulses_to_mm(raw_value);
+                break;
+            case Unit_mm_ss:
+                converted_value = pulses_to_mm(raw_value);
+                break;
+            default:
+                break;
+        }
+    }
+
+    printf("║%-4u║%-15s║%-10s║%-10s║%-10s║%-8s║%-8s║%-10lu║%-10.2f║\n",
+        setting_detail[index].id,
+        setting_detail[index].key,
+        unit_to_str(setting_detail[index].unit),
+        format_to_str(setting_detail[index].datatype),
+        format_to_str(setting_detail[index].uinput_datatype),
+        setting_detail[index].recompute ? "true" : "false", 
+        setting_detail[index].trigger ? "true" : "false",
+        raw_value,
+        converted_value
+    );
+}
+
+void report_setting_header(void) {
+    printf("\n╔════╦═══════════════╦══════════╦══════════╦══════════╦════════╦════════╦══════════╦══════════╗\n");
+    printf(  "║ ID ║     KEY       ║   UNIT   ║ DATATYPE ║  INPUT   ║ RECOMP ║TRIGGER ║   RAW    ║   CONV   ║\n");
+    printf(  "╠════╬═══════════════╬══════════╬══════════╬══════════╬════════╬════════╬══════════╬══════════╣\n");
+}
+
+void report_setting_footer(void) {
+    printf(  "╚════╩═══════════════╩══════════╩══════════╩══════════╩════════╩════════╩══════════╩══════════╝\n");
+}
+
+void report_setting_long(uint32_t id) {
+    report_setting_header();
+    report_setting_long_row(id);
+    report_setting_footer();
+}
+
+void report_all_long(void) {
+
+    report_setting_header();
+    for(uint32_t i = 0; i < N_settings; i++) {
+        report_setting_long_row(setting_detail[i].id);
+    }
+    report_setting_footer();    
 }
 
 uint32_t float_to_fixed(float num) {

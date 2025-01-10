@@ -55,7 +55,9 @@
 			"istream": "c",
 			"ostream": "c",
 			"limits": "c",
-			"semaphore": "c"
+			"semaphore": "c",
+			"mutex": "c",
+			"stop_token": "c"
 		}
 	}
 }
