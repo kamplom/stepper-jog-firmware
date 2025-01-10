@@ -142,15 +142,16 @@ typedef struct {
     units_settings_t units;
 } settings_t;
 
-typedef struct setting_detail {
+typedef struct {
     setting_id_t id;
     const char *key;
-    setting_unit_t ipnut_unit;
+    setting_unit_t unit;
     setting_datatype_t datatype;
     setting_datatype_t uinput_datatype;
     bool recompute;
-    bool recompute_trigger;
+    bool trigger;
     void *value;
+    void *default_value;   
 } setting_detail_t;
 
 extern settings_t settings;

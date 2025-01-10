@@ -53,7 +53,9 @@
 			"utility": "cpp",
 			"settings.h": "c",
 			"istream": "c",
-			"ostream": "c"
+			"ostream": "c",
+			"limits": "c",
+			"semaphore": "c"
 		}
 	}
 }
