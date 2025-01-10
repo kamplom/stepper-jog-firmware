@@ -185,7 +185,7 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
                             {
                                 *is_incremental = true;
                             }
-                            *xVal = mm_to_pulses(strtof(token + 1, &endptr)); // Convert the number after 'X' to float
+                            *xVal = mm_to_pulses_f(strtof(token + 1, &endptr)); // Convert the number after 'X' to float
                         }
                         else
                         {

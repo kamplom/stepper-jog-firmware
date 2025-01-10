@@ -29,6 +29,10 @@ float pulses_to_mm(int32_t pulses) {
     return pulses * (int32_t)settings.units.mm_rev / (float)settings.units.pulses_rev;
 }
 
-uint32_t mm_to_pulses(float mm) {
+uint32_t mm_to_pulses(uint32_t mm) {
     return mm * settings.units.pulses_rev / settings.units.mm_rev;
+}
+
+uint32_t mm_to_pulses_f(float mm) {
+    return (uint32_t)((uint32_t)mm * settings.units.pulses_rev / settings.units.mm_rev);
 }

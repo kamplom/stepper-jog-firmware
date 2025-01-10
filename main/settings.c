@@ -303,7 +303,6 @@ bool set_setting(uint32_t id, char *str_value) {
         default:
             break;
     }
-    // check max and min
     
     //write to ram
     switch (setting_detail[index].datatype) {

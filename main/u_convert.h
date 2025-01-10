@@ -7,4 +7,5 @@ uint32_t pulses_to_steps_u(uint32_t pulses);
 //float steps_to_mm(uint32_t steps);
 //uint32_t mm_to_steps(float mm);
 float pulses_to_mm(int32_t pulses);
-uint32_t mm_to_pulses(float mm);
+uint32_t mm_to_pulses(uint32_t mm);
+uint32_t mm_to_pulses_f(float mm);
