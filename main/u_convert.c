@@ -25,9 +25,9 @@ uint32_t pulses_to_steps_u(uint32_t pulses) {
 //     return (uint32_t)(mm * settings.units.steps_mm);
 // }
 
-//float pulses_to_mm(uint32_t pulses) {
-//    return steps_to_mm(pulses_to_steps(pulses));
-//}
+float pulses_to_mm(int32_t pulses) {
+    return pulses * (int32_t)settings.units.mm_rev / (float)settings.units.pulses_rev;
+}
 
 uint32_t mm_to_pulses(float mm) {
     return mm * settings.units.pulses_rev / settings.units.mm_rev;

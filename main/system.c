@@ -137,10 +137,8 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
         }
         else if (copy[0] == '?')
         {
-            int count;
-            pcnt_unit_get_count(pcnt_unit, &count);
-            int real_pos = (count * 60) / 4000;
-            printf("pos: %d\n", real_pos);
+            pcnt_unit_get_count(pcnt_unit, &sys.real.pos);
+            printf("pos: %.2f\n", pulses_to_mm(sys.real.pos));
             return;
         }
         else if (copy[0] == '$')
