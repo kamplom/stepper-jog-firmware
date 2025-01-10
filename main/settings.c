@@ -2,6 +2,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <math.h>
 #include "esp_log.h"
 #include "settings.h"
 #include "system.h"
@@ -102,6 +103,27 @@ bool find_setting(uint32_t id, uint32_t *index) {
     return false;
 }
 
+uint32_t convert_to_report(uint32_t index) {
+    if (setting_detail[index].recompute) {
+        switch(setting_detail[index].unit) {
+            case Unit_mm:
+                return (uint32_t)round(pulses_to_mm(*(uint32_t*)setting_detail[index].value));
+                break;            
+            case Unit_mm_s:
+                return (uint32_t)round(pulses_to_mm(*(uint32_t*)setting_detail[index].value));
+                break;
+            case Unit_mm_ss:
+                return (uint32_t)round(pulses_to_mm(*(uint32_t*)setting_detail[index].value));
+                break;
+            default:
+                return *(uint32_t*)setting_detail[index].value;
+                break;
+        }
+    } else {
+        return *(uint32_t*)setting_detail[index].value;
+    }
+}
+
 void report_setting_short(uint32_t id) {
     uint32_t index;
     if(!find_setting(id, &index)) {
@@ -113,10 +135,10 @@ void report_setting_short(uint32_t id) {
             printf("%s: %f\n", setting_detail[index].key, *(float *)setting_detail[index].value);
             break;
         case Format_Int:
-            printf("%s: %"PRIu32"\n", setting_detail[index].key, *(uint32_t *)setting_detail[index].value);
+            printf("%u=%"PRIu32"\n", setting_detail[index].id, convert_to_report(index));
             break;
         case Format_Bool:
-            printf("%s: %d\n", setting_detail[index].key, *(bool *)setting_detail[index].value);
+            printf("%u=%d\n", setting_detail[index].id, *(bool *)setting_detail[index].value);
             break;
         default:
             printf("bad\n");
@@ -162,28 +184,7 @@ void report_setting_long_row(uint32_t id) {
         return;
     }
 
-    // Get raw and converted values
-    uint32_t raw_value = *(uint32_t*)setting_detail[index].value;
-    float converted_value = raw_value;
-
-    // Convert based on unit type if recompute is true
-    if (setting_detail[index].recompute) {
-        switch(setting_detail[index].unit) {
-            case Unit_mm:
-                converted_value = pulses_to_mm(raw_value);
-                break;            
-            case Unit_mm_s:
-                converted_value = pulses_to_mm(raw_value);
-                break;
-            case Unit_mm_ss:
-                converted_value = pulses_to_mm(raw_value);
-                break;
-            default:
-                break;
-        }
-    }
-
-    printf("║%-4u║%-15s║%-10s║%-10s║%-10s║%-8s║%-8s║%-10lu║%-10.2f║\n",
+    printf("║%-4u║%-15s║%-10s║%-10s║%-10s║%-8s║%-8s║%-10lu║%-10lu║\n",
         setting_detail[index].id,
         setting_detail[index].key,
         unit_to_str(setting_detail[index].unit),
@@ -191,14 +192,14 @@ void report_setting_long_row(uint32_t id) {
         format_to_str(setting_detail[index].uinput_datatype),
         setting_detail[index].recompute ? "true" : "false", 
         setting_detail[index].trigger ? "true" : "false",
-        raw_value,
-        converted_value
+        *(uint32_t*)setting_detail[index].value,
+        convert_to_report(index)
     );
 }
 
 void report_setting_header(void) {
     printf("\n╔════╦═══════════════╦══════════╦══════════╦══════════╦════════╦════════╦══════════╦══════════╗\n");
-    printf(  "║ ID ║     KEY       ║   UNIT   ║ DATATYPE ║  INPUT   ║ RECOMP ║TRIGGER ║   RAW    ║   CONV   ║\n");
+    printf(  "║ ID ║     KEY       ║ INPUT U. ║ DATATYPE ║  INPUT   ║ RECOMP ║TRIGGER ║   RAW    ║   CONV   ║\n");
     printf(  "╠════╬═══════════════╬══════════╬══════════╬══════════╬════════╬════════╬══════════╬══════════╣\n");
 }
 
