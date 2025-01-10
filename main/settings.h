@@ -77,8 +77,6 @@ typedef struct  {
     minmax_t vel;
     minmax_t acc;
     uint32_t enable_delay;
-    float steps_mm;
-    uint32_t fixedp_steps_mm;
     bool dir;
     uint32_t dir_delay;
 } motion_settings_t;

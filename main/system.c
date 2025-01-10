@@ -196,7 +196,7 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
                         token = strchr(copy, 'F');
                         if (token != NULL)
                         {
-                            *fVal = strtof(token + 1, &endptr) * settings.motion.steps_mm; // Convert the number after 'F' to float
+                            *fVal = strtof(token + 1, &endptr); // Convert the number after 'F' to float
                         }
                         else
                         {
@@ -206,11 +206,11 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
                         token = strchr(copy, 'A');
                         if (token != NULL)
                         {
-                            *aVal = strtof(token + 1, &endptr) * settings.motion.steps_mm; // Convert the number after 'A' to float
+                            *aVal = strtof(token + 1, &endptr); // Convert the number after 'A' to float
                         }
                         else
                         {
-                            *aVal = MAX_ACCEL * settings.motion.steps_mm / 2;
+                            *aVal = MAX_ACCEL/ 2;
                         }
                         set_state(STATE_JOGGING);
                     }

@@ -22,7 +22,7 @@ uint32_t pulses_to_steps_u(uint32_t pulses) {
 //}
 
 // uint32_t mm_to_steps(float mm) {
-//     return (uint32_t)(mm * settings.units.steps_mm);
+//     return (uint32_t)(mm);
 // }
 
 float pulses_to_mm(int32_t pulses) {

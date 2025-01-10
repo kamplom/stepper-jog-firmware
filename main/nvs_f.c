@@ -152,10 +152,6 @@ esp_err_t nvs_read_setting(uint32_t id)
     err = nvs_read_setting_helper(index);
 
     nvs_close(nvs_settings);
-    if (setting_detail[index].id == Setting_Stepsmm)
-    {
-        settings.motion.steps_mm = fixed_to_float(settings.motion.fixedp_steps_mm);
-    }
     return ESP_OK;
 }
 
@@ -182,6 +178,5 @@ esp_err_t nvs_read_all_settings(void)
 
     }
     nvs_close(nvs_settings);
-    settings.motion.steps_mm = fixed_to_float(settings.motion.fixedp_steps_mm);
     return ESP_OK;
 }

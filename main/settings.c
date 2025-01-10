@@ -16,7 +16,6 @@ settings_t settings;
 static const settings_t settings_defaults = {
     .settings_modified = false,
     //motion
-    .motion.steps_mm = STEPS_PER_MM,
     .motion.pos.min = MIN_POS_LIMIT,
     .motion.pos.max = MAX_POS_LIMIT,
     .motion.vel.min = MIN_FEED_RATE,
@@ -59,7 +58,6 @@ static const settings_t settings_defaults = {
 
 const setting_detail_t setting_detail[] = {
     // id                          | key             |unit       | datatype    | input type |recompute| trigger | value pointer                    | default
-    {Setting_Stepsmm,              "Steps_mm",       Unit_step_mm, Format_Int, Format_Float, false,     false,    &settings.motion.fixedp_steps_mm,  &settings_defaults.motion.fixedp_steps_mm},
     {Setting_MinPos,               "MinPos",         Unit_mm,    Format_Int,   Format_Int,   true,      false,    &settings.motion.pos.min,          &settings_defaults.motion.pos.min},
     {Setting_MaxPos,               "MaxPos",         Unit_mm,    Format_Int,   Format_Int,   true,      false,    &settings.motion.pos.max,          &settings_defaults.motion.pos.max},
     {Setting_MinVel,               "MinVel",         Unit_mm_s,  Format_Int,   Format_Int,   true,      false,    &settings.motion.vel.min,          &settings_defaults.motion.vel.min},
@@ -152,7 +150,7 @@ float fixed_to_float(uint32_t num) {
 void recompute_stepsmm(float old_stepsmm) {
     for(uint32_t i = 0; i < N_settings; i++) {
         if(setting_detail[i].recompute) {
-            *(uint32_t*)setting_detail[i].value = (uint32_t)(*(uint32_t *)setting_detail[i].value * settings.motion.steps_mm / old_stepsmm); 
+            *(uint32_t*)setting_detail[i].value = (uint32_t)(*(uint32_t *)setting_detail[i].value / old_stepsmm); 
         }
     }
 }
@@ -179,15 +177,9 @@ bool set_setting(uint32_t id, char *str_value) {
         ESP_LOGD(TAG, "float: %f", float_value);
         
         ESP_LOGD(TAG, "float: %f", float_value);
-        float old_steps_mm = settings.motion.steps_mm;
-        settings.motion.steps_mm = float_value;
-        settings.motion.fixedp_steps_mm = float_to_fixed(float_value);
-        ESP_LOGD(TAG, "fixed: %"PRIu32, settings.motion.fixedp_steps_mm);
-        ESP_LOGD(TAG, "float again: %f", fixed_to_float(settings.motion.fixedp_steps_mm));
         // write to nvs
         ESP_LOGD(TAG, "steps per mm correctly");
         //trigger recompute of all the quantities set on steps
-        recompute_stepsmm(old_steps_mm);
         return true;
     }
     switch (setting_detail[index].uinput_datatype) {
@@ -197,7 +189,7 @@ bool set_setting(uint32_t id, char *str_value) {
                 return false;
             }
             if(setting_detail[index].recompute) {
-                u32_value = (uint32_t)(u32_value * settings.motion.steps_mm);
+                u32_value = (uint32_t)(u32_value);
             }
             break;
         case Format_Float:
@@ -207,7 +199,7 @@ bool set_setting(uint32_t id, char *str_value) {
                 return false;
             }
             if(setting_detail[index].recompute) {
-                u32_value = (uint32_t)(float_value * settings.motion.steps_mm);
+                u32_value = (uint32_t)(float_value );
             }
             break;
 
@@ -292,10 +284,6 @@ void settings_init(void) {
             }
         }
     }
-    ESP_LOGD(TAG, "stepsmm: %f", settings.motion.steps_mm);
-    settings.motion.fixedp_steps_mm = float_to_fixed(settings.motion.steps_mm);
-    ESP_LOGD(TAG, "fixed stepsmm: %"PRIu32, settings.motion.fixedp_steps_mm);
-    ESP_LOGD(TAG, "float again: %f", fixed_to_float(settings.motion.fixedp_steps_mm));
     // load settings from nvs if they exist
     nvs_read_all_settings();
     nvs_write_all_settings();
