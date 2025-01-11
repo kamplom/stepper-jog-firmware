@@ -53,8 +53,10 @@ void app_main(void)
                 motor_enabler(true);
                 if(sys.target.pos > sys.status.pos) {
                     sys.status.vel = settings.motion.vel.min;
+                    sys.hard_limit_pin = settings.gpio.limit_max;
                 } else {
                     sys.status.vel = -settings.motion.vel.min;
+                    sys.hard_limit_pin = settings.gpio.limit_min;
                 }
                 iterations = 0;
 
@@ -68,7 +70,7 @@ void app_main(void)
                 jog_aux.status.vel = jog_aux.aux.vel;
 
                 //loop until we reach the target position. transmit a step each iteration
-                while (abs(sys.real.pos - (int32_t)sys.target.pos) > 1) {
+                while (abs(sys.real.pos - (int32_t)sys.target.pos) > 1 && gpio_get_level(sys.hard_limit_pin)) {
                     symbol_duration = (settings.rmt.motor_resolution / (uint32_t)abs(jog_aux.status.vel) / 2);
                     symbol.duration0 = symbol_duration;
                     symbol.duration1 = symbol_duration;
@@ -92,6 +94,9 @@ void app_main(void)
             } else {
                 set_state(STATE_IDLE);
                 motor_enabler(false);
+                //reset target, just in case
+                pcnt_unit_get_count(pcnt_unit, &sys.real.pos);
+                sys.target.pos = sys.real.pos;
             }
         } else if (sys.state & STATE_WHEEL) {
             ESP_LOGI(TAG, "pos: %"PRIu32, sys.status.pos);

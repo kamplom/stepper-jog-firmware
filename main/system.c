@@ -69,11 +69,24 @@ bool string_is_empty(const char *str)
     return str == NULL || str[0] == '\0';
 }
 
+void invert_hard_limit_pin(void)
+{
+    if (sys.hard_limit_pin == settings.gpio.limit_max)
+    {
+        sys.hard_limit_pin = settings.gpio.limit_min;
+    }
+    else
+    {
+        sys.hard_limit_pin = settings.gpio.limit_max;
+    }
+}
+
 void invert_motor_direction(void)
 {
     gpio_set_level(settings.gpio.motor_dir, !sys.status.dir);
     sys.status.dir = !sys.status.dir;
     vTaskDelay(pdMS_TO_TICKS(settings.motion.dir_delay));
+    invert_hard_limit_pin();
 }
 
 void set_motor_direction(bool dir)

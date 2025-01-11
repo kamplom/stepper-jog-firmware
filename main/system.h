@@ -39,6 +39,7 @@ typedef struct system {
     physical_target_t target;
     uint8_t state;
     wheel_state_t wheel;    
+    uint32_t hard_limit_pin;
 } system_t;
 
 typedef struct jog_aux {
