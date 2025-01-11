@@ -1,0 +1,1 @@
+uint32_t soft_limits_check(uint32_t);

@@ -17,6 +17,7 @@
 #include "wheel.h"
 #include "serial.h"
 #include "u_convert.h"
+#include "limits.h"
 
 static const char *TAG = "System";
 
@@ -191,7 +192,7 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
                         {
                             *xVal = 0;
                         }
-                        sys.target.pos = *xVal;
+                        sys.target.pos = soft_limits_check(*xVal);
                         // Find the 'F' value
                         token = strchr(copy, 'F');
                         if (token != NULL)
