@@ -79,3 +79,4 @@ bool str_to_float(char *str, float *out);
 
 void invert_motor_direction(void);
 void set_motor_direction(bool dir);
+void update_real_pos(void);

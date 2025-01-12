@@ -152,7 +152,7 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
         }
         else if (copy[0] == '?')
         {
-            pcnt_unit_get_count(pcnt_unit, &sys.real.pos);
+            update_real_pos(); 
             printf("pos: %.2f\n", pulses_to_mm(sys.real.pos));
             return;
         }
@@ -304,6 +304,18 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
     }
 }
 
+void update_real_pos() {
+    int32_t count;
+    pcnt_unit_get_count(pcnt_unit, &count);
+    sys.real.pos = count + (int32_t)settings.homing.offset;
+}
+
+esp_err_t set_home_here(){
+    pcnt_unit_clear_count(pcnt_unit);
+    sys.real.pos = mm_to_pulses(settings.homing.offset);
+    return ESP_OK;
+}
+
 void homing(void)
 {
     uint32_t symbol_duration = 0;
@@ -374,7 +386,7 @@ void homing(void)
         }
         else if (phase == 3)
         {
-            pcnt_unit_clear_count(pcnt_unit);
+            set_home_here();
             for (int i = 0; i < settings.homing.retraction; i++)
             {
                 rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);

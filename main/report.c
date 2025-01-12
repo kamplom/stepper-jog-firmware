@@ -72,7 +72,7 @@ esp_err_t report_EoM(){
 
 static void pos_report_timer_callback(void* arg) {
     int32_t last_pos = sys.real.pos;
-    ESP_ERROR_CHECK(pcnt_unit_get_count(pcnt_unit, &sys.real.pos));
+    update_real_pos();
     if(sys.real.pos != last_pos) {
         report_position();
     }

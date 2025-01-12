@@ -46,6 +46,8 @@ void app_main(void)
             ESP_LOGI(TAG, "Ended homing sequence");
             motor_enabler(false);
         } else if (sys.state & STATE_JOGGING) {
+            update_real_pos();
+            sys.status.pos = sys.real.pos;
             ESP_LOGI(TAG, "state: jogging");
             // exit the inner while loop when 
             // we might need to jog
@@ -62,8 +64,6 @@ void app_main(void)
 
                 // keep doing steps until we reach the desired position
                 ESP_LOGI(TAG, "Jogging to %"PRIu32" from %"PRIu32, sys.target.pos, sys.status.pos);
-                pcnt_unit_get_count(pcnt_unit, &sys.real.pos);
-                sys.status.pos = sys.real.pos;
                 jog_aux.aux.pos = pulses_to_steps(sys.status.pos);
                 jog_aux.aux.vel = pulses_to_steps(sys.status.vel);
                 jog_aux.status.pos = jog_aux.aux.pos;
@@ -71,16 +71,17 @@ void app_main(void)
 
                 //loop until we reach the target position. transmit a step each iteration
                 while (abs(sys.real.pos - (int32_t)sys.target.pos) > 1 && gpio_get_level(sys.hard_limit_pin)) {
+                    //first symbol is sent without setting the motor direction
                     symbol_duration = (settings.rmt.motor_resolution / (uint32_t)abs(jog_aux.status.vel) / 2);
                     symbol.duration0 = symbol_duration;
                     symbol.duration1 = symbol_duration;
                     rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
                     //calc next symbol, it will increase position
                     update_velocity_exact(pulses_to_steps_u(sys.target.pos), &jog_aux.aux.pos, &jog_aux.aux.vel);
-                    update_velocity(jog_aux.aux.pos, &jog_aux.status.pos, &jog_aux.status.vel);
+                    update_velocity((uint32_t)jog_aux.aux.pos, &jog_aux.status.pos, &jog_aux.status.vel);
                     
                     iterations += 1;
-                    pcnt_unit_get_count(pcnt_unit, &sys.real.pos);
+                    update_real_pos();
                     //jog_aux.status.pos = pulses_to_steps(sys.real.pos);
                     sys.status.pos = sys.real.pos;
                     //ESP_LOGI(TAG,"%"PRIi32" > %"PRIi32, sys.target.pos, sys.real.pos / 4);
@@ -95,7 +96,7 @@ void app_main(void)
                 set_state(STATE_IDLE);
                 motor_enabler(false);
                 //reset target, just in case
-                pcnt_unit_get_count(pcnt_unit, &sys.real.pos);
+                update_real_pos();
                 sys.target.pos = sys.real.pos;
             }
         } else if (sys.state & STATE_WHEEL) {

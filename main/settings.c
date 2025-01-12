@@ -31,6 +31,7 @@ static const settings_t settings_defaults = {
     .homing.fast_vel = HOMING_FAST_SPEED,
     .homing.slow_vel = HOMING_SLOW_SPEED,
     .homing.retraction = HOMING_RETRACTION_DISTANCE,
+    .homing.offset = 667,
     //gpio
     .gpio.limit_max = LIMIT_SWITCH_MAX_GPIO,
     .gpio.limit_min = LIMIT_SWITCH_MIN_GPIO,

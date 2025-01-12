@@ -85,6 +85,7 @@ typedef struct {
     uint32_t fast_vel;
     uint32_t slow_vel;
     uint32_t retraction;
+    uint32_t offset;
     bool direction;
 } homing_settings_t;
 
