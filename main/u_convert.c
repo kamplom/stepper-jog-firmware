@@ -36,3 +36,7 @@ uint32_t mm_to_pulses(uint32_t mm) {
 uint32_t mm_to_pulses_f(float mm) {
     return (uint32_t)((uint32_t)mm * settings.units.pulses_rev / settings.units.mm_rev);
 }
+
+uint32_t pulses_to_microm(int32_t pulses) {
+    return pulses * (int32_t)settings.units.mm_rev * 1000 / (int32_t)settings.units.pulses_rev;
+}

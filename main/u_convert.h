@@ -9,3 +9,4 @@ uint32_t pulses_to_steps_u(uint32_t pulses);
 float pulses_to_mm(int32_t pulses);
 uint32_t mm_to_pulses(uint32_t mm);
 uint32_t mm_to_pulses_f(float mm);
+uint32_t pulses_to_microm(int32_t pulses);
