@@ -18,6 +18,7 @@
 #include "serial.h"
 #include "u_convert.h"
 #include "limits.h"
+#include "report.h"
 
 static const char *TAG = "System";
 
@@ -519,5 +520,6 @@ esp_err_t start_up_sequence()
     pcnt_init();
     // wheel_timer_init();
     pos_report_timer_init();
+    status_report_timer_init();
     return ESP_OK;
 }

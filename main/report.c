@@ -1,6 +1,7 @@
 #include <esp_log.h>
 #include <esp_err.h>
 #include "esp_timer.h"
+#include <math.h>
 
 #include "settings.h"
 #include "u_convert.h"
@@ -35,10 +36,13 @@ esp_err_t report_string(const char *data, size_t len) {
 esp_err_t report_status(){
     //craft the message
     //header >
-    char msg[2];
+    char msg[4];
+    uint32_t mm = (uint32_t)round(pulses_to_mm(settings.motion.pos.max));
     msg[0] = '>';
     msg[1] = (char)sys.state;
-    report_bytes(&msg[0], 2);
+    msg[2] = (mm >> 8) & 0xFF;
+    msg[3] = mm & 0xFF;
+    report_bytes(&msg[0], 4);
     return ESP_OK;
 }
 
@@ -59,7 +63,7 @@ esp_err_t report_EoM(){
     //craft the message
     //header @
     char msg[1];
-    msg[0] = '@';
+    msg[0] = '¬';
     report_bytes(&msg[0], 1);
     return ESP_OK;
 }
@@ -85,5 +89,23 @@ esp_err_t pos_report_timer_init() {
     ESP_ERROR_CHECK(esp_timer_create(&pos_report_timer_args, &pos_report_timer));
 
     ESP_ERROR_CHECK(esp_timer_start_periodic(pos_report_timer, 25*1000));
+    return ESP_OK;
+}
+
+static void status_report_timer_callback(void* arg) {
+    report_status();
+    return;
+}
+
+esp_err_t status_report_timer_init() {
+    const esp_timer_create_args_t status_report_timer_args = {
+        .callback = &status_report_timer_callback,
+        .name = "status_report_timer"
+    };
+
+    esp_timer_handle_t status_report_timer;
+    ESP_ERROR_CHECK(esp_timer_create(&status_report_timer_args, &status_report_timer));
+
+    ESP_ERROR_CHECK(esp_timer_start_periodic(status_report_timer, 1500*1000));
     return ESP_OK;
 }
