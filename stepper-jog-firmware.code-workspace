@@ -57,7 +57,25 @@
 			"limits": "c",
 			"semaphore": "c",
 			"mutex": "c",
-			"stop_token": "c"
+			"stop_token": "c",
+			"strstream": "cpp",
+			"bitset": "cpp",
+			"codecvt": "cpp",
+			"concepts": "cpp",
+			"coroutine": "cpp",
+			"cstddef": "cpp",
+			"cstdio": "cpp",
+			"cwchar": "cpp",
+			"deque": "cpp",
+			"forward_list": "cpp",
+			"string_view": "cpp",
+			"fstream": "cpp",
+			"initializer_list": "cpp",
+			"new": "cpp",
+			"stdexcept": "cpp",
+			"typeindex": "cpp",
+			"valarray": "cpp",
+			"any": "c"
 		}
 	}
 }

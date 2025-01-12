@@ -125,6 +125,15 @@ typedef struct {
     uint32_t pulses_steps_ratio;
 } units_settings_t;
 
+typedef struct {
+    uint32_t prefered;
+    bool ws_activate;
+    bool serial_activate;
+    bool pos_auto_report;
+    bool status_auto_report;
+} stream_settings_t;
+
+
 // Struct that stores the settings. Used at runtime, loads values either from defaults or nvs
 // Any spatial unit must be steps.
 // Temporal units may be different
@@ -138,6 +147,7 @@ typedef struct {
     cmd_settings_t cmd;
     damper_settings_t damper;
     units_settings_t units;
+    stream_settings_t stream;
 } settings_t;
 
 typedef struct {

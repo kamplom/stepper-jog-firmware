@@ -54,7 +54,9 @@ static const settings_t settings_defaults = {
     //units
     .units.steps_rev = STEPS_PER_REV,
     .units.pulses_rev = PULSES_PER_REV,
-    .units.mm_rev = MM_PER_REV
+    .units.mm_rev = MM_PER_REV,
+    .stream.serial_activate = 1,
+    .stream.ws_activate = 0
 };
 
 const setting_detail_t setting_detail[] = {

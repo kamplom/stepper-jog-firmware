@@ -33,7 +33,7 @@ jog_aux_t jog_aux = {};
 float convert_to_smooth_freq(uint32_t freq1, uint32_t freq2, uint32_t freqx)
 {
     float normalize_x = ((float)(freqx - freq1)) / (freq2 - freq1);
-    // third-order "smoothstep" function: https://en.wikipedia.org/wiki/Smoothstep
+    // third-order "smoothstep" function: https://esn.wikipedia.org/wiki/Smoothstep
     float smooth_x = normalize_x * normalize_x * (3 - 2 * normalize_x);
     // fifth-order "smoothstep" function: https://en.wikipedia.org/wiki/Smoothstep
     // float smooth_x = normalize_x * normalize_x * normalize_x * (normalize_x * (normalize_x * 6 - 15) + 10);
@@ -518,5 +518,6 @@ esp_err_t start_up_sequence()
     // main loop. If target is not pos exectues whatever update_velocity tells it to.
     pcnt_init();
     // wheel_timer_init();
+    pos_report_timer_init();
     return ESP_OK;
 }
