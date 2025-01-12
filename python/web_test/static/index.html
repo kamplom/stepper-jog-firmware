@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ZigZag Control</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .left-panel, .right-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 10px;
+        }
+
+        #position {
+            font-size: 120px;
+            font-weight: 300;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+
+        #status, #max-position {
+            font-size: 24px;
+            color: #7f8c8d;
+            margin: 5px 0;
+        }
+
+        .control-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .control-button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            width: 330px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            margin-bottom: 0;
+        }
+
+        .num-button {
+            padding: 18px 10px;
+            font-size: 24px;
+            border: none;
+            background: #ecf0f1;
+            color: #2c3e50;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 35px;
+        }
+
+        .num-button:hover {
+            background: #dfe6e9;
+            transform: scale(1.05);
+        }
+
+        .backspace {
+            font-size: 20px;
+        }
+
+        .num-display {
+            font-size: 32px;
+            font-weight: 300;
+            padding: 12px 15px;
+            margin: 10px 0;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            min-height: 45px;
+            width: 330px;
+            box-sizing: border-box;
+            text-align: right;
+            color: #2c3e50;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .send-jog {
+            grid-column: 1 / span 3;
+            background: #2ecc71;
+            color: white;
+            font-weight: bold;
+            padding: 18px 10px;
+        }
+
+        .send-jog:hover {
+            background: #27ae60;
+        }
+
+        #command {
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ecf0f1;
+            border-radius: 6px;
+            width: 280px;
+            margin: 15px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        #command:focus {
+            border-color: #3498db;
+        }
+
+        .position-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 450px;
+            padding: 20px;
+        }
+
+        .position-value {
+            font-size: 140px;
+            font-weight: 300;
+            color: #2c3e50;
+            margin: 0;
+            line-height: 1;
+            width: 100%;
+            text-align: center;
+        }
+
+        .position-unit {
+            font-size: 42px;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="left-panel">
+        <div class="position-container">
+            <div class="position-value" id="position-value">0.0</div>
+            <div class="position-unit">mm</div>
+        </div>
+        <div id="status">State: UNKNOWN</div>
+        <div id="max-position">Max Position: 0 mm</div>
+        <input type="text" id="command" placeholder="Enter command...">
+        <button id="home-button" class="control-button">Home</button>
+    </div>
+    
+    <div class="right-panel">
+        <div class="num-display" id="num-display">0</div>
+        <div class="numpad">
+            <button class="num-button">7</button>
+            <button class="num-button">8</button>
+            <button class="num-button">9</button>
+            <button class="num-button">4</button>
+            <button class="num-button">5</button>
+            <button class="num-button">6</button>
+            <button class="num-button">1</button>
+            <button class="num-button">2</button>
+            <button class="num-button">3</button>
+            <button class="num-button">0</button>
+            <button class="num-button">.</button>
+            <button class="num-button backspace">⌫</button>
+            <button class="num-button send-jog">Send Jog</button>
+        </div>
+    </div>
+    
+    <script>
+        const ws = new WebSocket(`ws://${window.location.host}/ws`);
+        const positionValue = document.getElementById('position-value');
+        const status = document.getElementById('status');
+        const maxPosition = document.getElementById('max-position');
+        
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.type === 'position') {
+                positionValue.textContent = data.value.toFixed(1);
+            } else if (data.type === 'status') {
+                status.textContent = `State: ${data.state}`;
+                maxPosition.textContent = `Max Position: ${data.max_position} mm`;
+            }
+        };
+
+        const command = document.getElementById('command');
+
+        command.onkeypress = function(e) {
+            if (e.key === 'Enter') {
+                ws.send(command.value);
+                command.value = '';
+            }
+        };
+
+        document.getElementById('home-button').onclick = function() {
+            ws.send('h');
+        };
+
+        let currentNum = '0';
+        const numDisplay = document.getElementById('num-display');
+        
+        document.querySelectorAll('.num-button').forEach(button => {
+            button.addEventListener('click', () => {
+                if (button.textContent === '⌫') {
+                    currentNum = currentNum.slice(0, -1) || '0';
+                } else if (button.textContent === 'Send Jog') {
+                    ws.send(`$J=X${currentNum}`);
+                    currentNum = '0';
+                } else {
+                    if (currentNum === '0' && button.textContent !== '.') {
+                        currentNum = button.textContent;
+                    } else {
+                        currentNum += button.textContent;
+                    }
+                }
+                numDisplay.textContent = currentNum;
+            });
+        });
+    </script>
+</body>
+</html>

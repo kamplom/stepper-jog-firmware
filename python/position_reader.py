@@ -6,6 +6,21 @@ import glob
 from serial.serialutil import SerialException
 from getpass import getpass
 
+STATE_BITS = {
+    (1 << 0): 'ALERT',
+    (1 << 1): 'IDLE',
+    (1 << 2): 'JOGGING',
+    (1 << 3): 'HOMING',
+    (1 << 4): 'WHEEL'
+}
+
+def parse_status(state_byte):
+    states = []
+    for bit, label in STATE_BITS.items():
+        if state_byte & bit:
+            states.append(label)
+    return ' | '.join(states) if states else 'UNKNOWN'
+
 def find_acm_ports():
     return glob.glob('/dev/ttyACM*')
 
@@ -43,18 +58,30 @@ def bytes_to_uint32(b1, b2, b3):
     # Reconstruct 24-bit number from 3 bytes
     return (b1 << 16) | (b2 << 8) | b3
 
+def bytes_to_uint16(b1, b2):
+    return (b1 << 8) | b2
+
 def read_position():
     global ser
+    max_position_mm = 0  # Store max position
+    
     while not exit_flag.is_set():
         try:
             if ser.in_waiting:
                 byte = ser.read()
-                if byte == b'@':
+                if byte == b'@':  # Position message
                     data = ser.read(3)
                     if len(data) == 3:
                         position_um = bytes_to_uint32(data[0], data[1], data[2])
                         position_mm = position_um / 1000.0
                         print(f"\rPosition: {position_mm:.3f} mm", end='', flush=True)
+                elif byte == b'>':  # Status message
+                    data = ser.read(3)  # Read state byte + 2 bytes max position
+                    if len(data) == 3:
+                        state = data[0]
+                        max_position_mm = bytes_to_uint16(data[1], data[2])
+                        print(f"\nState: {parse_status(state)}")
+                        print(f"Max position: {max_position_mm} mm")
             time.sleep(0.001)
         except SerialException:
             print("\nDevice disconnected")
