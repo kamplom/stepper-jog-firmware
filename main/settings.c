@@ -26,6 +26,7 @@ static const settings_t settings_defaults = {
     .motion.dir = INVERT_DIRECTION,
     .motion.enable_delay = ENABLE_DELAY,
     .motion.dir_delay = CHANGE_DIR_DELAY,
+    .motion.jog_cancel_dist = 6667,
     // homing
     .homing.direction = HOMING_DIRECTION,
     .homing.fast_vel = HOMING_FAST_SPEED,

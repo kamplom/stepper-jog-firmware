@@ -79,6 +79,7 @@ typedef struct  {
     uint32_t enable_delay;
     bool dir;
     uint32_t dir_delay;
+    uint32_t jog_cancel_dist;
 } motion_settings_t;
 
 typedef struct {

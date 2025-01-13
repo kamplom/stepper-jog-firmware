@@ -20,6 +20,9 @@
 #include "limits.h"
 #include "report.h"
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 static const char *TAG = "System";
 
 rmt_transmit_config_t tx_config = {};
@@ -147,8 +150,14 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
     {
         if (copy[0] == settings.cmd.jog_cancel)
         {
-            // cancel jog, controlled manner
+            if(sys.state == STATE_JOGGING) {
+                if (jog_aux.status.vel > 0) {
+                    sys.target.pos = MIN(soft_limits_check(sys.real.pos + (int32_t)settings.motion.jog_cancel_dist), sys.target.pos);
+                } else {
+                    sys.target.pos = MAX(soft_limits_check(sys.real.pos - (int32_t)settings.motion.jog_cancel_dist), sys.target.pos);
+                }
             return;
+            }
         }
         else if (copy[0] == '?')
         {
