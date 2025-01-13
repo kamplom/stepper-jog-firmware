@@ -241,22 +241,28 @@
         };
 
         let currentNum = '0';
+        let numberEntered = false;  // Track if user has entered any number
         const numDisplay = document.getElementById('num-display');
         
         document.querySelectorAll('.num-button').forEach(button => {
-            if (!button.classList.contains('cancel-jog')) {  // Skip cancel button
+            if (!button.classList.contains('cancel-jog')) {
                 button.addEventListener('click', () => {
                     if (button.textContent === '⌫') {
                         currentNum = currentNum.slice(0, -1) || '0';
+                        numberEntered = currentNum !== '0';
                     } else if (button.classList.contains('send-jog')) {
-                        ws.send(`$J=X${currentNum}`);
-                        currentNum = '0';
+                        if (numberEntered) {  // Send if user has entered any number
+                            ws.send(`$J=X${currentNum}`);
+                            currentNum = '0';
+                            numberEntered = false;
+                        }
                     } else {
                         if (currentNum === '0' && button.textContent !== '.') {
                             currentNum = button.textContent;
                         } else {
                             currentNum += button.textContent;
                         }
+                        numberEntered = true;
                     }
                     numDisplay.textContent = currentNum;
                 });
