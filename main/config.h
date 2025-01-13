@@ -47,6 +47,7 @@
 #define STATE_JOGGING              (1 << 2)
 #define STATE_HOMING               (1 << 3)
 #define STATE_WHEEL                (1 << 4)
+#define STATE_MLOCKED              (1 << 5) 
 
 #define ENABLE_DELAY             650 //ms
 #define CHANGE_DIR_DELAY         250 //ms

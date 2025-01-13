@@ -306,6 +306,7 @@ bool set_setting(uint32_t id, char *str_value) {
 
     if (setting_detail[index].id == Setting_MotionLock) {
         motor_enabler(settings.motion.lock);
+        set_state(STATE_MLOCKED);
         return true;
     }
     if(setting_detail[index].trigger) {

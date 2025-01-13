@@ -476,6 +476,13 @@ bool set_state(uint8_t state)
         {
             return false;
         }
+    case STATE_MLOCKED:
+        if (settings.motion.lock) { 
+            sys.state |= STATE_MLOCKED;
+        } else {
+            sys.state &= ~STATE_MLOCKED;
+        }
+        
     default:
         return false;
     }
