@@ -498,13 +498,14 @@ bool motor_enabler(bool action)
         ESP_LOGD(TAG, "Motor enabled");
         return true;
     }
-    else
+    else if (!settings.motion.lock)
     {
         gpio_set_level(STEP_MOTOR_GPIO_EN, !STEP_MOTOR_ENABLE_LEVEL);
         vTaskDelay(pdMS_TO_TICKS(ENABLE_DELAY));
         ESP_LOGD(TAG, "Motor disabled");
         return true;
     }
+    return false;
 }
 
 esp_err_t start_up_sequence()

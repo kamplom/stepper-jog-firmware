@@ -27,6 +27,7 @@ static const settings_t settings_defaults = {
     .motion.enable_delay = ENABLE_DELAY,
     .motion.dir_delay = CHANGE_DIR_DELAY,
     .motion.jog_cancel_dist = JOG_CANCEL_DISTANCE,
+    .motion.lock = false,
     // homing
     .homing.direction = HOMING_DIRECTION,
     .homing.fast_vel = HOMING_FAST_SPEED,
@@ -95,7 +96,8 @@ const setting_detail_t setting_detail[] = {
     {Setting_JogCancelDist,        "JogCancelDist",  Unit_mm,    Format_Int,   Format_Int,   true,      false,     &settings.motion.jog_cancel_dist,  &settings_defaults.motion.jog_cancel_dist},
     {Setting_HomingOffset,         "HomingOffset",   Unit_mm,    Format_Int,   Format_Int,   true,      false,     &settings.homing.offset,           &settings_defaults.homing.offset},
     {Setting_SerialActivate,       "SerialActivate", Unit_bool,  Format_Bool,  Format_Bool,  false,     false,     &settings.stream.serial_activate,  &settings_defaults.stream.serial_activate},
-    {Setting_WsActivate,           "WsActivate",     Unit_bool,  Format_Bool,  Format_Bool,  false,     false,     &settings.stream.ws_activate,      &settings_defaults.stream.ws_activate}
+    {Setting_WsActivate,           "WsActivate",     Unit_bool,  Format_Bool,  Format_Bool,  false,     false,     &settings.stream.ws_activate,      &settings_defaults.stream.ws_activate},
+    {Setting_MotionLock,           "MotionLock",     Unit_bool,  Format_Bool,  Format_Bool,  false,     false,     &settings.motion.lock,            &settings_defaults.motion.lock}
 };
 
 uint32_t N_settings = sizeof(setting_detail)/sizeof(setting_detail[0]);
@@ -302,6 +304,10 @@ bool set_setting(uint32_t id, char *str_value) {
             break;
     }
 
+    if (setting_detail[index].id == Setting_MotionLock) {
+        motor_enabler(settings.motion.lock);
+        return true;
+    }
     if(setting_detail[index].trigger) {
         recompute_stepsmm(old_value);
     }

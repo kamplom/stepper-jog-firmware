@@ -4,7 +4,7 @@
 
 typedef enum {
     // Movement section
-    Setting_Stepsmm = 0,
+    Setting_MotionLock = 0,
     Setting_MinPos = 1,
     Setting_MaxPos = 2,
     Setting_MinVel = 3,
@@ -86,6 +86,7 @@ typedef struct  {
     bool dir;
     uint32_t dir_delay;
     uint32_t jog_cancel_dist;
+    bool lock;
 } motion_settings_t;
 
 typedef struct {
