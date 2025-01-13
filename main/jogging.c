@@ -42,6 +42,14 @@ void update_velocity(uint32_t target, int32_t *pos_ptr, int32_t *vel_ptr)
         vel = -settings.motion.vel.min;
     }
 
+    if(vel == 0) {
+        if (prev_vel > 0) {
+            vel = -settings.motion.vel.min;
+        } else {
+            vel = settings.motion.vel.min;
+        }
+    }
+
     // increment system position
     if (vel > 0) {
         pos += 1;
