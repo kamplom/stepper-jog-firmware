@@ -6,6 +6,7 @@
 // Include modules
 #include "system.h"
 #include "settings.h"
+#include "u_convert.h"
 
 static const char *TAG = "Jogging";
 
@@ -84,7 +85,7 @@ void update_velocity_exact(uint32_t target, int32_t *pos_ptr, int32_t *vel_ptr)
 
 
     // Clamp maximum speed
-    float maxChange = settings.motion.vel.max * settings.damper.smoothTime / 1000;
+    float maxChange = pulses_to_steps_u(settings.motion.vel.max) * settings.damper.smoothTime / 1000;
     change = fmax(-maxChange, fmin(change, maxChange));
     target = pos - change;
 
