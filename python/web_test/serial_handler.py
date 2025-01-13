@@ -8,7 +8,8 @@ class SerialHandler:
         (1 << 1): 'IDLE',
         (1 << 2): 'JOGGING',
         (1 << 3): 'HOMING',
-        (1 << 4): 'WHEEL'
+        (1 << 4): 'WHEEL',
+        (1 << 5): 'MLOCKED'  # Changed from 'LOCKED' to 'MLOCKED' to match firmware
     }
     
     def __init__(self):
@@ -43,7 +44,7 @@ class SerialHandler:
         try:
             if self.ser and self.ser.in_waiting:
                 byte = self.ser.read()
-                if byte == b'@':
+                if (byte == b'@'):
                     data = self.ser.read(3)
                     if len(data) == 3:
                         position_um = self.bytes_to_uint32(data[0], data[1], data[2])

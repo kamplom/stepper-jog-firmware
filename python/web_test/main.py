@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 serial_handler = SerialHandler()
+cached_position = None  # Store last known position
 
 def round_to_half(value):
     """Round to nearest 0.5"""
@@ -23,18 +24,28 @@ async def root():
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    global cached_position
     await websocket.accept()
+    
     if not serial_handler.connect():
         await websocket.close(1001, "Unable to connect to device")
         return
+        
+    # Send cached position on connect
+    await websocket.send_json({
+        "type": "position",
+        "value": cached_position if cached_position is not None else 0.0
+    })
     
     async def read_serial():
+        global cached_position
         while True:
             data = serial_handler.read_data()
             if data:
                 try:
                     if data["type"] == "position":
                         data["value"] = round_to_half(data["value"])
+                        cached_position = data["value"]  # Update cache
                     await websocket.send_json(data)
                 except:
                     break

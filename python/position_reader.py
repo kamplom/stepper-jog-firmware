@@ -11,7 +11,8 @@ STATE_BITS = {
     (1 << 1): 'IDLE',
     (1 << 2): 'JOGGING',
     (1 << 3): 'HOMING',
-    (1 << 4): 'WHEEL'
+    (1 << 4): 'WHEEL',
+    (1 << 5): 'LOCKED',
 }
 
 def parse_status(state_byte):
