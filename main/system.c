@@ -154,7 +154,9 @@ void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t
                 if (jog_aux.status.vel > 0) {
                     sys.target.pos = MIN(soft_limits_check(sys.real.pos + (int32_t)settings.motion.jog_cancel_dist), sys.target.pos);
                 } else {
-                    sys.target.pos = MAX(soft_limits_check(sys.real.pos - (int32_t)settings.motion.jog_cancel_dist), sys.target.pos);
+                    if (sys.real.pos > (int32_t)settings.motion.jog_cancel_dist) {
+                        sys.target.pos = MAX(soft_limits_check(sys.real.pos - (int32_t)settings.motion.jog_cancel_dist), sys.target.pos);
+                    }
                 }
             return;
             }

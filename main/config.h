@@ -20,6 +20,8 @@
 #define MAX_POS_LIMIT               1300
 #define INVERT_DIRECTION            false
 #define SMOOTHTIME                  400
+#define JOG_CANCEL_DISTANCE         75 //mm
+
 //Rmt config
 #define RMT_MEM_BLOCK_SYMBOLS      64
 #define RMT_TRANS_QUEUE_DEPTH      1
@@ -33,6 +35,7 @@
 #define HOMING_SLOW_SPEED           5
 #define HOMING_RETRACTION_DISTANCE  2 //mm
 #define HOMING_DIRECTION            false
+#define HOMING_OFFSET               10 //mm
 
 #define WHEEL_ENCODER_A             12
 #define WHEEL_ENCODER_B             11
@@ -63,3 +66,6 @@
 #define UART_RX_BUF_SIZE    1024
 #define UART_TX_BUF_SIZE    1024
 #define UART_SEL_NUM        UART_NUM_0
+
+#define WS_STREAM_ACTIVATE      false
+#define SERIAL_STREAM_ACTIVATE  true

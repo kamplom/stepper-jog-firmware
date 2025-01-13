@@ -26,13 +26,13 @@ static const settings_t settings_defaults = {
     .motion.dir = INVERT_DIRECTION,
     .motion.enable_delay = ENABLE_DELAY,
     .motion.dir_delay = CHANGE_DIR_DELAY,
-    .motion.jog_cancel_dist = 6667,
+    .motion.jog_cancel_dist = JOG_CANCEL_DISTANCE,
     // homing
     .homing.direction = HOMING_DIRECTION,
     .homing.fast_vel = HOMING_FAST_SPEED,
     .homing.slow_vel = HOMING_SLOW_SPEED,
     .homing.retraction = HOMING_RETRACTION_DISTANCE,
-    .homing.offset = 667,
+    .homing.offset = HOMING_OFFSET,
     //gpio
     .gpio.limit_max = LIMIT_SWITCH_MAX_GPIO,
     .gpio.limit_min = LIMIT_SWITCH_MIN_GPIO,
@@ -57,8 +57,8 @@ static const settings_t settings_defaults = {
     .units.steps_rev = STEPS_PER_REV,
     .units.pulses_rev = PULSES_PER_REV,
     .units.mm_rev = MM_PER_REV,
-    .stream.serial_activate = 1,
-    .stream.ws_activate = 0
+    .stream.serial_activate = SERIAL_STREAM_ACTIVATE,
+    .stream.ws_activate = WS_STREAM_ACTIVATE
 };
 
 const setting_detail_t setting_detail[] = {
@@ -91,7 +91,11 @@ const setting_detail_t setting_detail[] = {
     {Setting_SmoothTime,           "SmoothTime",     Unit_ms,    Format_Int,   Format_Int,   false,     false,    &settings.damper.smoothTime,       &settings_defaults.damper.smoothTime},
     {Setting_StepsRev,             "StepsRev",       Unit_step,  Format_Int,   Format_Int,   false,     false,     &settings.units.steps_rev,         &settings_defaults.units.steps_rev},
     {Setting_PulsesRev,            "PulsesRev",      Unit_pulse, Format_Int,   Format_Int,   false,     true,     &settings.units.pulses_rev,        &settings_defaults.units.pulses_rev},
-    {Setting_mmRev,                "mmRev",          Unit_mm,    Format_Int,   Format_Int,   false,     false,     &settings.units.mm_rev,            &settings_defaults.units.mm_rev}
+    {Setting_mmRev,                "mmRev",          Unit_mm,    Format_Int,   Format_Int,   false,     false,     &settings.units.mm_rev,            &settings_defaults.units.mm_rev},
+    {Setting_JogCancelDist,        "JogCancelDist",  Unit_mm,    Format_Int,   Format_Int,   true,      false,     &settings.motion.jog_cancel_dist,  &settings_defaults.motion.jog_cancel_dist},
+    {Setting_HomingOffset,         "HomingOffset",   Unit_mm,    Format_Int,   Format_Int,   true,      false,     &settings.homing.offset,           &settings_defaults.homing.offset},
+    {Setting_SerialActivate,       "SerialActivate", Unit_bool,  Format_Bool,  Format_Bool,  false,     false,     &settings.stream.serial_activate,  &settings_defaults.stream.serial_activate},
+    {Setting_WsActivate,           "WsActivate",     Unit_bool,  Format_Bool,  Format_Bool,  false,     false,     &settings.stream.ws_activate,      &settings_defaults.stream.ws_activate}
 };
 
 uint32_t N_settings = sizeof(setting_detail)/sizeof(setting_detail[0]);

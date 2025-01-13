@@ -19,6 +19,7 @@ typedef enum {
     Setting_HomingSlowVelocity = 11,
     Setting_HomingRetractionDistance = 12,
     Setting_HomingInvertDirection = 13,
+    Setting_HomingOffset = 14,
     //GPIO
     Setting_GpioMotorEn = 20,
     Setting_GpioMotorDir = 21,
@@ -37,12 +38,17 @@ typedef enum {
     //comands
     Setting_JogCancelCmd = 60,
     Setting_HomingCmd = 61,
+    Setting_JogCancelDist = 62,
     //damper
     Setting_SmoothTime = 70,
     //units
     Setting_StepsRev = 80,
     Setting_PulsesRev = 81,
-    Setting_mmRev = 82
+    Setting_mmRev = 82,
+    //streams
+    Setting_SerialActivate = 90,
+    Setting_WsActivate = 91,
+    Setting_PrefedStream = 92,
 } setting_id_t;
 
 typedef enum  {
