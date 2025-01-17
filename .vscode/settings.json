@@ -23,6 +23,6 @@
         "uart.h": "c",
         "string.h": "c"
     },
-    "idf.flashType": "UART",
+    "idf.flashType": "JTAG",
     "C_Cpp.errorSquiggles": "disabled"
 }
