@@ -69,7 +69,7 @@ void create_rmt_encoder(void);
 void execute_line(char *payload, char *pattern);
 float convert_to_smooth_freq(uint32_t freq1, uint32_t freq2, uint32_t freqx);
 void SmoothDamp(void);
-void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t *aVal, bool *is_incremental);
+void parse_command(const char *command, size_t len);
 void homing(void);
 bool set_state(uint8_t state);
 bool motor_enabler(bool action);

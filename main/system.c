@@ -19,9 +19,10 @@
 #include "u_convert.h"
 #include "limits.h"
 #include "report.h"
+#include "jogging.h"
+#include "report.h"
 
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
+
 
 static const char *TAG = "System";
 
@@ -142,176 +143,116 @@ bool str_to_float(char *str, float *out)
     *out = number;
     return true;
 }
-// this is fucking unmantainable and unreadable. fix it
-void parse_command(const char *command, uint32_t *xVal, uint32_t *fVal, uint32_t *aVal, bool *is_incremental)
-{
-    char *copy = strdup(command); // Make a copy of the command to avoid modifying the original
-    if (!string_is_empty(copy))
+
+void parse_jog_command(const char *command, size_t len) {
+    char *copy = strndup(command, len);
+    //first thing is the X or Y for axis, then value
+    uint32_t xVal = 0;
+    xVal = mm_to_pulses(strtoul(copy + 1, NULL, 10));
+    sys.target.pos = soft_limits_check(xVal);
+    set_state(STATE_JOGGING);
+}
+
+void parse_set_setting(const char *command, size_t len) {
+    char *copy = strndup(command, len);
+    char *end_ptr;
+    uint32_t id = strtoul(copy, &end_ptr, 10);
+    if (*end_ptr == '=')
     {
-        if (copy[0] == settings.cmd.jog_cancel)
+        if (set_setting(id, end_ptr + 1))
         {
-            if(sys.state == STATE_JOGGING) {
-                if (jog_aux.status.vel > 0) {
-                    sys.target.pos = MIN(soft_limits_check(sys.real.pos + (int32_t)settings.motion.jog_cancel_dist), sys.target.pos);
-                } else {
-                    if (sys.real.pos > (int32_t)settings.motion.jog_cancel_dist) {
-                        sys.target.pos = MAX(soft_limits_check(sys.real.pos - (int32_t)settings.motion.jog_cancel_dist), sys.target.pos);
-                    }
-                }
-            return;
-            }
-        }
-        else if (copy[0] == '?')
-        {
-            update_real_pos(); 
-            printf("pos: %.2f\n", pulses_to_mm(sys.real.pos));
+            report_setting_short(id);
             return;
         }
-        else if (copy[0] == '$')
+        else
         {
-            if (copy[1] == '$')
-            {
-                if (copy[2] == '\0')
-                {
-                    report_all_long();
-                    return;
-                }
-                else
-                {
-                    uint32_t id;
-                    if (str_to_u32(copy + 2, &id))
-                    {
-                        report_setting_long(id);
+            printf("Setting not set correctly\n");
+            return;
+        }
+    } else if (*end_ptr == '\0') {
+        report_setting_short(id);
+    } else {
+        printf("Not a valid id\n");
+        return;
+    }
+
+}
+
+void parse_report_setting(const char *command, size_t len) {
+    char *copy = strndup(command, len);
+    uint32_t id;
+    if (str_to_u32(copy, &id))
+    {
+        report_setting_short(id);
+        return;
+    }
+    else
+    {
+        printf("Not a valid id\n");
+        return;
+    }
+}
+
+void parse_command(const char *command, size_t len) {
+    char *copy = strndup(command, len);
+
+    if (string_is_empty(copy)) {
+        return;
+    }
+    switch(copy[0]){
+        case JOG_CANCEL_COMMAND:
+            cancel_jog();
+            return;
+            break;
+        case '?':
+            update_real_pos();
+            report_position();
+            return;
+            break;
+        case '$':
+            switch(copy[1]) {
+                case '$': //$$
+                    if (copy[2] == '\0') {
+                        report_all_long();
                         return;
-                    }
-                    else
-                    {
-                        printf("Not a valid id\n");
-                        return;
-                    }
-                }
-            }
-            else if (copy[1] == 'J')
-            {
-                if (copy[2] == '=')
-                {
-                    if (copy[3] == 'X')
-                    {
-                        // jog command
-                        char *token;
-                        char *endptr;
-                        // Initialize the is_incremental flag to false (default to absolute movement)
-                        *is_incremental = false;
-                        // Find the 'X' value
-                        token = strchr(copy, 'X');
-                        if (token != NULL)
-                        {
-                            // Check for '+' or '-' immediately after 'X'
-                            if (token[1] == '+' || token[1] == '-')
-                            {
-                                *is_incremental = true;
-                            }
-                            *xVal = mm_to_pulses_f(strtof(token + 1, &endptr)); // Convert the number after 'X' to float
-                        }
-                        else
-                        {
-                            *xVal = 0;
-                        }
-                        sys.target.pos = soft_limits_check(*xVal);
-                        // Find the 'F' value
-                        token = strchr(copy, 'F');
-                        if (token != NULL)
-                        {
-                            *fVal = strtof(token + 1, &endptr); // Convert the number after 'F' to float
-                        }
-                        else
-                        {
-                            *fVal = settings.motion.vel.max / 2;
-                        }
-                        // Find the 'A' value
-                        token = strchr(copy, 'A');
-                        if (token != NULL)
-                        {
-                            *aVal = strtof(token + 1, &endptr); // Convert the number after 'A' to float
-                        }
-                        else
-                        {
-                            *aVal = MAX_ACCEL/ 2;
-                        }
-                        set_state(STATE_JOGGING);
-                    }
-                }
-            }
-            else if (copy[1] == '\0')
-            {
-                report_all_short();
-                return;
-            }
-            else
-            {
-                if (copy[2] == '=')
-                {
-                    // if its a number + = set setting
-                    char *end_ptr;
-                    uint32_t id = strtoul(copy + 1, &end_ptr, 10);
-                    ESP_LOGD(TAG, "Setting id: %" PRIu32, id);
-                    if (*end_ptr == '=')
-                    {
-                        ESP_LOGD(TAG, "End_ptr is =");
-                        if (set_setting(id, end_ptr + 1))
-                        {
-                            report_setting_short(id);
-                            return;
-                        }
-                        else
-                        {
-                            printf("Setting not set correctly\n");
-                            return;
-                        }
-                    }
-                } else {
-                    if (copy[3] == '=')
-                    {
-                        // if its a number + = set setting
-                        char *end_ptr;
-                        uint32_t id = strtoul(copy + 1, &end_ptr, 10);
-                        ESP_LOGD(TAG, "Setting id: %" PRIu32, id);
-                        if (*end_ptr == '=')
-                        {
-                            ESP_LOGD(TAG, "End_ptr is =");
-                            if (set_setting(id, end_ptr + 1))
-                            {
-                                report_setting_short(id);
-                                return;
-                            }
-                            else
-                            {
-                                printf("Setting not set correctly\n");
-                                return;
-                            }
-                        }
-                    }
-                    else
-                    {
+                    } else {
                         uint32_t id;
-                        if (str_to_u32(copy + 1, &id))
-                        {
-                            report_setting_short(id);
+                        // we are not checking if it is null terminated
+                        if (str_to_u32(copy + 2, &id)) {
+                            report_setting_long(id);
                             return;
-                        }
-                        else
-                        {
+                        } else {
                             printf("Not a valid id\n");
                             return;
                         }
                     }
-                }
+                    return;
+                    break;
+                case 'J': //$J - maybe avoid sending the $? it is no longer grbl compatible
+                    if (copy[2] == 'X') { //will add heere denominations for other axis
+                        parse_jog_command(&copy[2], len - 2);
+                        return;
+                    } else {
+                        return;
+                    }
+                    return;
+                    break;
+                case '\0': //$
+                    report_all_short();
+                    return;
+                    break;
+                default:
+                    parse_set_setting(&copy[1], len - 1);
+                    return;
+                    break;
             }
-        }
-        else if (copy[0] == settings.cmd.homing)
-        {
+        case HOMING_COMMAND:
             sys.state = STATE_HOMING;
-        }
+            return;
+            break;
+        default:
+            return;
+            break;
     }
 }
 

@@ -75,7 +75,7 @@ static void uart_event_task(void *pvParameters)
                     bzero(pat, 2);
                     uart_read_bytes(UART_SEL_NUM, pat, 1, 100 / portTICK_PERIOD_MS);
                         // command is of the $ type, parse it.
-                    parse_command(dtmp, &sys.target.pos, &sys.target.vel, &sys.target.acc, &sys.target.is_incremental);
+                    parse_command(dtmp, buffered_size);
                 }
                 break;
             //Others
