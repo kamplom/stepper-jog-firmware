@@ -13,7 +13,7 @@ static const char *TAG = "Jogging";
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
 void cancel_jog(){
-    if(sys.state == STATE_JOGGING) {
+    if(sys.state & STATE_JOGGING) {
         if (jog_aux.status.vel > 0) {
             sys.target.pos = MIN(soft_limits_check(sys.real.pos + (int32_t)settings.motion.jog_cancel_dist), sys.target.pos);
         } else {
