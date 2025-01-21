@@ -30,7 +30,18 @@ class SerialHandler:
         return ' | '.join(states) if states else 'UNKNOWN'
         
     def connect(self):
-        ports = [self.last_working_port] if self.last_working_port else glob.glob('/dev/ttyACM*')
+        if self.ser:
+            try:
+                self.ser.close()
+            except:
+                pass
+            self.ser = None
+            self.last_working_port = None
+            
+        ports = glob.glob('/dev/ttyACM*')
+        if not ports:
+            return False
+            
         for port in ports:
             try:
                 self.ser = serial.Serial(port=port, baudrate=115200, timeout=1)
@@ -39,10 +50,23 @@ class SerialHandler:
             except SerialException:
                 continue
         return False
+
+    def disconnect(self):
+        """Safely disconnect from serial port"""
+        if self.ser:
+            try:
+                self.ser.close()
+            except:
+                pass
+            self.ser = None
+            self.last_working_port = None
         
     def read_data(self):
         try:
-            if self.ser and self.ser.in_waiting:
+            if not self.ser:
+                return None
+                
+            if self.ser.in_waiting:
                 byte = self.ser.read()
                 if (byte == b'@'):
                     data = self.ser.read(3)
@@ -52,15 +76,15 @@ class SerialHandler:
                 elif byte == b'>':
                     data = self.ser.read(3)
                     if len(data) == 3:
-                        state = data[0]
-                        max_pos = self.bytes_to_uint16(data[1], data[2])
-                        return {
-                            "type": "status",
-                            "state": self.parse_status(state),
-                            "max_position": max_pos
-                        }
+                        return {"type": "status", "state": self.parse_status(data[0]), 
+                               "max_position": self.bytes_to_uint16(data[1], data[2])}
         except SerialException:
-            self.connect()
+            try:
+                self.ser.close()
+            except:
+                pass
+            self.ser = None
+            self.last_working_port = None
         return None
     
     def send_command(self, cmd):

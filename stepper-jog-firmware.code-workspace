@@ -75,7 +75,8 @@
 			"stdexcept": "cpp",
 			"typeindex": "cpp",
 			"valarray": "cpp",
-			"any": "c"
+			"any": "c",
+			"rmt.h": "c"
 		}
 	}
 }

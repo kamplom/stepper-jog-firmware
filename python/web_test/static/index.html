@@ -28,7 +28,7 @@
             margin: 10px 0;
         }
 
-        #status, #max-position {
+        #status, #max-position, #offset-display {
             font-size: 24px;
             color: #7f8c8d;
             margin: 5px 0;
@@ -114,8 +114,12 @@
             justify-content: flex-end;
         }
 
+        .send-jog, .set-offset, .cancel-jog {
+            grid-column: auto;
+            width: 100px; /* Adjust width to fit inline */
+        }
+
         .send-jog {
-            grid-column: 1 / span 2;
             background: #2ecc71;
             color: white;
             font-weight: bold;
@@ -126,8 +130,17 @@
             background: #27ae60;
         }
 
+        .set-offset {
+            background: #3498db; /* Blue color */
+            color: white;
+            font-weight: bold;
+        }
+
+        .set-offset:active {
+            background: #2980b9; /* Darker blue for active state */
+        }
+
         .cancel-jog {
-            grid-column: 3;
             background: #e74c3c;
             color: white;
             font-weight: bold;
@@ -258,6 +271,7 @@
         <div class="status-container">
             <div id="status">State: UNKNOWN</div>
             <div id="max-position">Max pos: 0 mm</div>
+            <div id="offset-display">Offset: 0 mm</div>
         </div>
         <input type="text" id="command" placeholder="Enter command...">
         <div style="display: flex; gap: 10px;">
@@ -279,14 +293,17 @@
             <button class="num-button">2</button>
             <button class="num-button">3</button>
             <button class="num-button">0</button>
-            <button class="num-button">.</button>
+            <button class="num-button">-</button> <!-- Changed from decimal point to minus sign -->
             <button class="num-button backspace">⌫</button>
-            <button class="num-button send-jog">Send Jog</button>
+            <button class="num-button send-jog">Jog</button>
+            <button class="num-button set-offset">Offset</button> <!-- Updated label to Offset -->
             <button class="num-button cancel-jog">×</button>
         </div>
     </div>
     
     <script>
+        const MAX_POSITION = 1350;  // Easy to change parameter
+        let positionOffset = parseInt(localStorage.getItem('positionOffset')) || 0;
         let reconnectAttempts = 0;
         let maxReconnectAttempts = 5;
         let reconnectTimeout = 1000;
@@ -319,12 +336,19 @@
             ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 if (data.type === 'position') {
-                    positionValue.textContent = data.value.toFixed(1);
+                    positionValue.textContent = (MAX_POSITION - data.value + positionOffset).toFixed(1);
                 } else if (data.type === 'status') {
                     status.textContent = `State: ${data.state.replace('MLOCKED', '')}`;
                     isLocked = data.state.includes('MLOCKED');
                     lockButton.className = `action-button lock-button ${isLocked ? 'locked' : 'unlocked'}`;
-                    maxPosition.textContent = `Max Position: ${data.max_position} mm`;
+                    maxPosition.textContent = `Max pos: ${(MAX_POSITION - data.max_position + positionOffset).toFixed(1)} mm`;
+                } else if (data.type === 'offset') {
+                    const previousOffset = positionOffset;
+                    positionOffset = data.value;
+                    offsetDisplay.textContent = `Offset: ${positionOffset} mm`;
+                    // Update position value with new offset
+                    const currentPosition = parseFloat(positionValue.textContent);
+                    positionValue.textContent = (currentPosition - previousOffset + positionOffset).toFixed(1);
                 }
             };
         }
@@ -334,12 +358,21 @@
         const positionValue = document.getElementById('position-value');
         const status = document.getElementById('status');
         const maxPosition = document.getElementById('max-position');
+        const offsetDisplay = document.getElementById('offset-display');
+        offsetDisplay.textContent = `Offset: ${positionOffset} mm`;
 
         const command = document.getElementById('command');
 
         command.onkeypress = function(e) {
             if (e.key === 'Enter') {
-                ws.send(command.value);
+                if (command.value.startsWith('o')) {
+                    const newOffset = parseInt(command.value.slice(1));
+                    if (!isNaN(newOffset)) {
+                        ws.send(`offset:${newOffset}`);
+                    }
+                } else {
+                    ws.send(command.value);
+                }
                 command.value = '';
             }
         };
@@ -358,15 +391,35 @@
                     if (button.textContent === '⌫') {
                         currentNum = currentNum.slice(0, -1) || '0';
                         numberEntered = currentNum !== '0';
+                    } else if (button.textContent === '-') {
+                        if (currentNum === '0' || currentNum === '') {
+                            currentNum = '-';
+                            numberEntered = true;
+                        }
                     } else if (button.classList.contains('send-jog')) {
                         if (numberEntered) {  // Send if user has entered any number
-                            ws.send(`$J=X${currentNum}`);
+                            let jogValue = MAX_POSITION - (parseFloat(currentNum) - positionOffset);
+                            if (jogValue < 0) {
+                                jogValue = 0;
+                            }
+                            ws.send(`$JX${jogValue}`);
+                            currentNum = '0';
+                            numberEntered = false;
+                        }
+                    } else if (button.classList.contains('set-offset')) {
+                        if (numberEntered) {
+                            const newOffset = parseInt(currentNum);
+                            if (!isNaN(newOffset)) {
+                                ws.send(`offset:${newOffset}`);
+                            }
                             currentNum = '0';
                             numberEntered = false;
                         }
                     } else {
-                        if (currentNum === '0' && button.textContent !== '.') {
+                        if (currentNum === '0') {
                             currentNum = button.textContent;
+                        } else if (currentNum === '-') {
+                            currentNum = '-' + button.textContent;
                         } else {
                             currentNum += button.textContent;
                         }
