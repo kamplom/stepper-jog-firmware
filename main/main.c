@@ -51,7 +51,7 @@ void app_main(void)
             ESP_LOGI(TAG, "state: jogging");
             // exit the inner while loop when 
             // we might need to jog
-            if (abs(sys.real.pos - (int32_t)sys.target.pos) > 2) {
+            if (abs(sys.real.pos - (int32_t)sys.target.pos) > 15) {
                 motor_enabler(true);
                 if(sys.target.pos > sys.status.pos) {
                     sys.status.vel = settings.motion.vel.min;
