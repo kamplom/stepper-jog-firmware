@@ -154,6 +154,10 @@ void parse_jog_command(const char *command, size_t len) {
 }
 
 void parse_set_setting(const char *command, size_t len) {
+    //improve this shitty statement
+    if (!(sys.state & STATE_IDLE)) {
+        return;
+    }
     char *copy = strndup(command, len);
     char *end_ptr;
     uint32_t id = strtoul(copy, &end_ptr, 10);
