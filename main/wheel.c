@@ -9,6 +9,7 @@
 // include modules
 #include "config.h"
 #include "system.h" 
+#include "settings.h"
 
 
 static const char *TAG = "wheel";
@@ -28,15 +29,15 @@ void pcnt_init() {
     ESP_ERROR_CHECK(pcnt_unit_set_glitch_filter(pcnt_unit, &fliter_config));
 
     pcnt_chan_config_t chan_a_config = {
-        .edge_gpio_num = WHEEL_ENCODER_A,
-        .level_gpio_num = WHEEL_ENCODER_B,
+        .edge_gpio_num = settings.gpio.wheel_A,
+        .level_gpio_num = settings.gpio.wheel_B,
     };
     pcnt_channel_handle_t pcnt_chan_a = NULL;
     ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit, &chan_a_config, &pcnt_chan_a));
 
     pcnt_chan_config_t chan_b_config = {
-        .edge_gpio_num = WHEEL_ENCODER_B,
-        .level_gpio_num = WHEEL_ENCODER_A,
+        .edge_gpio_num = settings.gpio.wheel_B,
+        .level_gpio_num = settings.gpio.wheel_A,
     };
     pcnt_channel_handle_t pcnt_chan_b = NULL;
     ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit, &chan_b_config, &pcnt_chan_b));
