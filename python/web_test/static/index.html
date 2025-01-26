@@ -316,6 +316,12 @@
                 console.log('Connected');
                 reconnectAttempts = 0;
                 document.body.style.opacity = '1';
+                // Add position polling
+                setInterval(() => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send('?');
+                    }
+                }, 10000);
             };
 
             ws.onclose = function() {
