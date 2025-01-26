@@ -35,7 +35,8 @@ async def websocket_endpoint(websocket: WebSocket):
     connected_clients.append(websocket)
     
     try:
-        if not serial_handler.connect():
+        # Only connect if not already connected
+        if not serial_handler.is_connected() and not serial_handler.connect():
             await websocket.close(code=1001)
             return
             
@@ -78,7 +79,8 @@ async def websocket_endpoint(websocket: WebSocket):
         pass
     finally:
         connected_clients.remove(websocket)
-        serial_handler.disconnect()
+        # Remove the serial disconnect - we want to keep it running
+        # The serial connection will stay alive even when clients disconnect
 
 async def broadcast(data):
     for client in connected_clients:
