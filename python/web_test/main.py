@@ -78,7 +78,6 @@ async def websocket_endpoint(websocket: WebSocket):
         pass
     finally:
         connected_clients.remove(websocket)
-        serial_handler.disconnect()
 
 async def broadcast(data):
     for client in connected_clients:
