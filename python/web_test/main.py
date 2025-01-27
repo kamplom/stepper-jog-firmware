@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="statifc")
 serial_handler = SerialHandler()
 cached_position = None  # Store last known position
 offset_value = 0.0  # Store offset value
@@ -27,6 +27,18 @@ async def root():
 @app.get("/distance")
 async def get_position():
     return FileResponse('static/distance.html')
+
+@app.get("/distanceN")
+async def distanceN():
+    return FileResponse('static/distanceN.html')
+
+@app.get("/raw")
+async def return_raw():
+    return FileResponse('static/raw.html')
+
+@app.get("/serial")
+async def serial_monitor():
+    return FileResponse('static/serial.html')
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -78,6 +90,7 @@ async def websocket_endpoint(websocket: WebSocket):
         pass
     finally:
         connected_clients.remove(websocket)
+        serial_handler.disconnect()
 
 async def broadcast(data):
     for client in connected_clients:

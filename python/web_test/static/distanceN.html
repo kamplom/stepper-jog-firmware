@@ -14,9 +14,10 @@
         }
 
         .container {
-            display: grid;
-            grid-template-columns: 25% 25% 25% 25%;
+            display: flex;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             width: 100%;
             height: 100%;
             padding: 20px;
@@ -26,63 +27,42 @@
             box-sizing: border-box;
         }
 
-        .status-container {
-            grid-column: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 3vw;  /* Increased gap between items */
-            padding-left: 3vw;
-            font-size: 4vw;  /* Increased from 3vw */
-            font-weight: 300;  /* Added lighter weight to match position value */
-        }
-
-        #status, #max-position, #offset-display {
-            color: #2c3e50;  /* Changed to match position value color */
-            white-space: nowrap;  /* Prevent wrapping */
-        }
-
-        .measurement-container {
-            grid-column: 2 / span 2;
-            display: flex;
-            align-items: baseline;
-            justify-content: center;
-        }
-
-        .unit-container {
-            grid-column: 4;
-            display: flex;
-            align-items: baseline;
-            padding-left: 1vw;
-        }
-
         .position-value {
             font-size: 20vw;
             font-weight: 300;
             color: #2c3e50;
             margin: 0;
             line-height: 1;
-            text-align: right;
+            text-align: center;
         }
 
         .position-unit {
             font-size: 6vw;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+
+        .status-container {
+            display: flex;
+            justify-content: center;
+            gap: 2vw;
+            margin-top: 5vw;
+        }
+
+        #status, #max-position, #offset-display {
+            font-size: 3vw;
             color: #7f8c8d;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="position-value" id="position-value">0.0</div>
+        <div class="position-unit">mm</div>
         <div class="status-container">
             <div id="status">State: UNKNOWN</div>
             <div id="max-position">Max pos: 0 mm</div>
             <div id="offset-display">Offset: 0 mm</div>
-        </div>
-        <div class="measurement-container">
-            <div class="position-value" id="position-value">0.0</div>
-        </div>
-        <div class="unit-container">
-            <div class="position-unit">mm</div>
         </div>
     </div>
     
