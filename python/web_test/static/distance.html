@@ -15,7 +15,7 @@
 
         .container {
             display: grid;
-            grid-template-columns: 25% 25% 25% 25%;
+            grid-template-columns: 25% 50% 25%;
             align-items: center;
             width: 100%;
             height: 100%;
@@ -31,33 +31,43 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 3vw;  /* Increased gap between items */
-            padding-left: 3vw;
-            font-size: 4vw;  /* Increased from 3vw */
-            font-weight: 300;  /* Added lighter weight to match position value */
+            gap: 1vw;
+            padding-left: 1vw;
+            padding-right: 1vw;
+            font-size: 2.5vw;
         }
 
-        #status, #max-position, #offset-display {
-            color: #2c3e50;  /* Changed to match position value color */
-            white-space: nowrap;  /* Prevent wrapping */
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1vw;
+        }
+
+        .status-label {
+            color: #7f8c8d;
+            font-size: 2vw;
+        }
+
+        .status-value {
+            color: #2c3e50;
         }
 
         .measurement-container {
-            grid-column: 2 / span 2;
+            grid-column: 2;
             display: flex;
             align-items: baseline;
             justify-content: center;
         }
 
         .unit-container {
-            grid-column: 4;
+            grid-column: 3;
             display: flex;
             align-items: baseline;
-            padding-left: 1vw;
+            padding-left: 10vw;  /* Increased from 3vw to 5vw */
         }
 
         .position-value {
-            font-size: 20vw;
+            font-size: 18vw;  /* Reduced from 20vw */
             font-weight: 300;
             color: #2c3e50;
             margin: 0;
@@ -74,9 +84,18 @@
 <body>
     <div class="container">
         <div class="status-container">
-            <div id="status">State: UNKNOWN</div>
-            <div id="max-position">Max pos: 0 mm</div>
-            <div id="offset-display">Offset: 0 mm</div>
+            <div class="status-item">
+                <span class="status-label">State:</span>
+                <span class="status-value" id="status">UNKNOWN</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Max pos:</span>
+                <span class="status-value" id="max-position">0 mm</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Offset:</span>
+                <span class="status-value" id="offset-display">0 mm</span>
+            </div>
         </div>
         <div class="measurement-container">
             <div class="position-value" id="position-value">0.0</div>
