@@ -148,13 +148,13 @@
                 if (data.type === 'position') {
                     positionValue.textContent = (MAX_POSITION - data.value + positionOffset).toFixed(1);
                 } else if (data.type === 'status') {
-                    status.textContent = `State: ${data.state.replace('MLOCKED', '')}`;
+                    status.textContent = `${data.state.replace('MLOCKED', '')}`;
                     isLocked = data.state.includes('MLOCKED');
-                    maxPosition.textContent = `Max pos: ${(MAX_POSITION - data.max_position + positionOffset).toFixed(1)} mm`;
+                    maxPosition.textContent = `${(MAX_POSITION - data.max_position + positionOffset).toFixed(1)} mm`;
                 } else if (data.type === 'offset') {
                     const previousOffset = positionOffset;
                     positionOffset = data.value;
-                    offsetDisplay.textContent = `Offset: ${positionOffset} mm`;
+                    offsetDisplay.textContent = `${positionOffset} mm`;
                     // Update position value with new offset
                     const currentPosition = parseFloat(positionValue.textContent);
                     positionValue.textContent = (currentPosition - previousOffset + positionOffset).toFixed(1);
