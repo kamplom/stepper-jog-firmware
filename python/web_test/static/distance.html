@@ -108,17 +108,9 @@
     <script>
         const MAX_POSITION = 4232; 
         let positionOffset = parseInt(localStorage.getItem('positionOffset')) || 0;
-        let isMetric = localStorage.getItem('isMetric') !== 'false';  // default to true if not set
+        let isMetric = true;  // Default to metric, will be updated by server
         let currentPositionInMeters = 0;  // Track position in meters
         
-        // Add storage event listener to sync units across pages
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'isMetric') {
-                isMetric = e.newValue !== 'false';
-                updateDisplays();  // Use the same function name as index.html
-            }
-        });
-
         // Conversion functions
         const mToFt = m => m * 3.28084;
         const ftToM = ft => ft / 3.28084;
@@ -181,6 +173,9 @@
                 if (data.type === 'position') {
                     currentPositionInMeters = (MAX_POSITION - data.value + positionOffset)/1000;
                     positionValue.textContent = formatPosition(currentPositionInMeters);
+                } else if (data.type === 'unit') {
+                    isMetric = data.isMetric;
+                    updateDisplays();
                 } else if (data.type === 'status') {
                     status.textContent = data.state.replace('MLOCKED', '').replace('|', '');
                     isLocked = data.state.includes('MLOCKED');

@@ -15,6 +15,7 @@ serial_handler = SerialHandler()
 cached_position = None  # Store last known position
 offset_value = 0.0  # Store offset value
 connected_clients = []
+is_metric = True  # Add global metric preference
 
 def round_to_half(value):
     """Round to nearest 0.5"""
@@ -42,7 +43,7 @@ async def serial_monitor():
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    global cached_position, offset_value
+    global cached_position, offset_value, is_metric
     await websocket.accept()
     connected_clients.append(websocket)
     
@@ -51,10 +52,15 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.close(code=1001)
             return
             
-        # Send cached position and offset on connect
+        # Send initial states in this specific order
+        if cached_position is not None:
+            await websocket.send_json({
+                "type": "position",
+                "value": cached_position
+            })
         await websocket.send_json({
-            "type": "position",
-            "value": cached_position if cached_position is not None else 0.0
+            "type": "unit",
+            "isMetric": is_metric
         })
         await websocket.send_json({
             "type": "offset",
@@ -70,6 +76,10 @@ async def websocket_endpoint(websocket: WebSocket):
                         if offset_value == 0.0:
                             offset_value = 0.0
                         await broadcast({"type": "offset", "value": offset_value})
+                    elif cmd.startswith("unit:"):
+                        is_metric = cmd.split(":")[1].lower() == "true"
+                        logger.info(f"Unit change: isMetric = {is_metric}")
+                        await broadcast({"type": "unit", "isMetric": is_metric})
                     else:
                         serial_handler.send_command(cmd)
             except asyncio.TimeoutError:

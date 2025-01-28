@@ -311,7 +311,7 @@
         let maxReconnectAttempts = 5;
         let reconnectTimeout = 1000;
         let ws;
-        let isMetric = localStorage.getItem('isMetric') !== 'false';  // default to true if not set
+        let isMetric = true;  // Default to metric, will be updated by server
         
         // Conversion functions
         const mToFt = m => m * 3.28084;
@@ -372,6 +372,9 @@
                 if (data.type === 'position') {
                     currentPositionInMeters = (MAX_POSITION - data.value + positionOffset)/1000;
                     positionValue.textContent = formatPosition(currentPositionInMeters);
+                } else if (data.type === 'unit') {
+                    isMetric = data.isMetric;
+                    updateDisplays();
                 } else if (data.type === 'status') {
                     status.textContent = `State: ${data.state.replace('MLOCKED', '').replace('|', '')}`;
                     isLocked = data.state.includes('MLOCKED');
@@ -428,9 +431,7 @@
                         currentNum = '0';
                         numberEntered = false;
                     } else if (button.textContent === 'unit') {
-                        isMetric = !isMetric;
-                        localStorage.setItem('isMetric', isMetric);
-                        updateDisplays();
+                        ws.send(`unit:${!isMetric}`); // Send the new state we want
                     } else if (button.textContent === '⌫') {
                         currentNum = currentNum.slice(0, -1) || '0';
                         numberEntered = currentNum !== '0';
