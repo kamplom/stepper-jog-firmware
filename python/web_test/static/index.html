@@ -436,7 +436,11 @@
                         currentNum = currentNum.slice(0, -1) || '0';
                         numberEntered = currentNum !== '0';
                     } else if (button.textContent === '-') {
-                        if (currentNum !== '0') {
+                        // Allow negative sign even when currentNum is '0'
+                        if (currentNum === '0') {
+                            currentNum = '-';
+                            numberEntered = true;  // Mark as entered so it can be used
+                        } else {
                             currentNum = currentNum.startsWith('-') ? 
                                 currentNum.slice(1) : '-' + currentNum;
                         }
