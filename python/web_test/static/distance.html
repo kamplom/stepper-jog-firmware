@@ -180,11 +180,11 @@
                     status.textContent = data.state.replace('MLOCKED', '').replace('|', '');
                     isLocked = data.state.includes('MLOCKED');
                     const maxPositionMeters = (MAX_POSITION - data.max_position + positionOffset)/1000;
-                    maxPosition.textContent = `Max pos: ${formatPosition(maxPositionMeters)} ${isMetric ? 'm' : 'ft'}`;
+                    maxPosition.textContent = `${formatPosition(maxPositionMeters)} ${isMetric ? 'm' : 'ft'}`;
                 } else if (data.type === 'offset') {
                     const previousOffset = positionOffset;
                     positionOffset = data.value;
-                    offsetDisplay.textContent = `Offset: ${(positionOffset/10).toFixed(1)} cm`;
+                    offsetDisplay.textContent = `${(positionOffset/10).toFixed(1)} cm`;
                     // Update position using currentPositionInMeters
                     currentPositionInMeters = currentPositionInMeters - previousOffset/1000 + positionOffset/1000;
                     positionValue.textContent = formatPosition(currentPositionInMeters);
