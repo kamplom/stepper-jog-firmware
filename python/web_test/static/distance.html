@@ -130,7 +130,7 @@
             
             // Update max position (assuming it's also stored in meters)
             const maxMeters = parseFloat(maxPosition.textContent.split(':')[1]);
-            maxPosition.textContent = `Max pos: ${formatPosition(maxMeters)} ${unit}`;
+            maxPosition.textContent = `${formatPosition(maxMeters)} ${unit}`;
         }
 
         let reconnectAttempts = 0;
@@ -198,7 +198,7 @@
         const status = document.getElementById('status');
         const maxPosition = document.getElementById('max-position');
         const offsetDisplay = document.getElementById('offset-display');
-        offsetDisplay.textContent = `Offset: ${positionOffset} mm`;
+        offsetDisplay.textContent = `${positionOffset} mm`;
 
         // Initialize displays with current unit
         updateDisplays();
