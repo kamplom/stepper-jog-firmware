@@ -57,17 +57,17 @@
 </head>
 <body>
     <div class="container">
-        <div class="position-value" id="position-value">0.0</div>
-        <div class="position-unit">mm</div>
+        <div class="position-value" id="position-value">0.000</div>
+        <div class="position-unit">m</div>
         <div class="status-container">
             <div id="status">State: UNKNOWN</div>
-            <div id="max-position">Max pos: 0 mm</div>
-            <div id="offset-display">Offset: 0 mm</div>
+            <div id="max-position">Max pos: 0.000 m</div>
+            <div id="offset-display">Offset: 0.000 m</div>
         </div>
     </div>
     
     <script>
-        const MAX_POSITION = 1350;  // Easy to change parameter
+        const MAX_POSITION = 4232;  // Easy to change parameter
         let positionOffset = parseInt(localStorage.getItem('positionOffset')) || 0;
         let reconnectAttempts = 0;
         let maxReconnectAttempts = 5;
@@ -107,18 +107,18 @@
             ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 if (data.type === 'position') {
-                    positionValue.textContent = (MAX_POSITION - data.value + positionOffset).toFixed(1);
+                    positionValue.textContent = ((MAX_POSITION - data.value + positionOffset)/1000).toFixed(3);
                 } else if (data.type === 'status') {
                     status.textContent = `State: ${data.state.replace('MLOCKED', '')}`;
                     isLocked = data.state.includes('MLOCKED');
-                    maxPosition.textContent = `Max pos: ${(MAX_POSITION - data.max_position + positionOffset).toFixed(1)} mm`;
+                    maxPosition.textContent = `Max pos: ${((MAX_POSITION - data.max_position + positionOffset)/1000).toFixed(3)} m`;
                 } else if (data.type === 'offset') {
                     const previousOffset = positionOffset;
                     positionOffset = data.value;
-                    offsetDisplay.textContent = `Offset: ${positionOffset} mm`;
+                    offsetDisplay.textContent = `Offset: ${(positionOffset/1000).toFixed(3)} m`;
                     // Update position value with new offset
                     const currentPosition = parseFloat(positionValue.textContent);
-                    positionValue.textContent = (currentPosition - previousOffset + positionOffset).toFixed(1);
+                    positionValue.textContent = (currentPosition - previousOffset/1000 + positionOffset/1000).toFixed(3);
                 }
             };
         }
@@ -129,7 +129,7 @@
         const status = document.getElementById('status');
         const maxPosition = document.getElementById('max-position');
         const offsetDisplay = document.getElementById('offset-display');
-        offsetDisplay.textContent = `Offset: ${positionOffset} mm`;
+        offsetDisplay.textContent = `Offset: ${(positionOffset/1000).toFixed(3)} m`;
     </script>
 </body>
 </html>

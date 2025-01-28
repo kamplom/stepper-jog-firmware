@@ -265,13 +265,13 @@
 <body>
     <div class="left-panel">
         <div class="position-container">
-            <div class="position-value" id="position-value">0.0</div>
-            <div class="position-unit">mm</div>
+            <div class="position-value" id="position-value">0.000</div>
+            <div class="position-unit">m</div>
         </div>
         <div class="status-container">
             <div id="status">State: UNKNOWN</div>
-            <div id="max-position">Max pos: 0 mm</div>
-            <div id="offset-display">Offset: 0 mm</div>
+            <div id="max-position">Max pos: 0.000 m</div>
+            <div id="offset-display">Offset: 0 cm</div>
         </div>
         <input type="text" id="command" placeholder="Enter command...">
         <div style="display: flex; gap: 10px;">
@@ -283,6 +283,9 @@
     <div class="right-panel">
         <div class="num-display" id="num-display">0</div>
         <div class="numpad">
+            <button class="num-button">unit</button>
+            <button class="num-button">clear</button>
+            <button class="num-button backspace">⌫</button>
             <button class="num-button">7</button>
             <button class="num-button">8</button>
             <button class="num-button">9</button>
@@ -293,10 +296,10 @@
             <button class="num-button">2</button>
             <button class="num-button">3</button>
             <button class="num-button">0</button>
-            <button class="num-button">-</button> <!-- Changed from decimal point to minus sign -->
-            <button class="num-button backspace">⌫</button>
+            <button class="num-button">.</button>
+            <button class="num-button">-</button>
             <button class="num-button send-jog">Jog</button>
-            <button class="num-button set-offset">Offset</button> <!-- Updated label to Offset -->
+            <button class="num-button set-offset">Offset</button>
             <button class="num-button cancel-jog">×</button>
         </div>
     </div>
@@ -308,6 +311,31 @@
         let maxReconnectAttempts = 5;
         let reconnectTimeout = 1000;
         let ws;
+        let isMetric = localStorage.getItem('isMetric') !== 'false';  // default to true if not set
+        
+        // Conversion functions
+        const mToFt = m => m * 3.28084;
+        const ftToM = ft => ft / 3.28084;
+
+        // Function to format the current position based on unit
+        function formatPosition(meters) {
+            return isMetric ? 
+                meters.toFixed(3) : 
+                mToFt(meters).toFixed(2);
+        }
+
+        // Keep track of the real position in meters
+        let currentPositionInMeters = 0;
+
+        function updateDisplays() {
+            const unit = isMetric ? 'm' : 'ft';
+            document.querySelector('.position-unit').textContent = unit;
+            positionValue.textContent = formatPosition(currentPositionInMeters);
+            
+            // Update max position (assuming it's also stored in meters)
+            const maxMeters = parseFloat(maxPosition.textContent.split(':')[1]);
+            maxPosition.textContent = `Max pos: ${formatPosition(maxMeters)} ${unit}`;
+        }
 
         function connect() {
             ws = new WebSocket(`ws://${window.location.host}/ws`);
@@ -342,19 +370,21 @@
             ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 if (data.type === 'position') {
-                    positionValue.textContent = (MAX_POSITION - data.value + positionOffset).toFixed(1);
+                    currentPositionInMeters = (MAX_POSITION - data.value + positionOffset)/1000;
+                    positionValue.textContent = formatPosition(currentPositionInMeters);
                 } else if (data.type === 'status') {
-                    status.textContent = `State: ${data.state.replace('MLOCKED', '')}`;
+                    status.textContent = `State: ${data.state.replace('MLOCKED', '').replace('|', '')}`;
                     isLocked = data.state.includes('MLOCKED');
                     lockButton.className = `action-button lock-button ${isLocked ? 'locked' : 'unlocked'}`;
-                    maxPosition.textContent = `Max pos: ${(MAX_POSITION - data.max_position + positionOffset).toFixed(1)} mm`;
+                    const maxPositionMeters = (MAX_POSITION - data.max_position + positionOffset)/1000;
+                    maxPosition.textContent = `Max pos: ${formatPosition(maxPositionMeters)} ${isMetric ? 'm' : 'ft'}`;
                 } else if (data.type === 'offset') {
                     const previousOffset = positionOffset;
                     positionOffset = data.value;
-                    offsetDisplay.textContent = `Offset: ${positionOffset} mm`;
-                    // Update position value with new offset
-                    const currentPosition = parseFloat(positionValue.textContent);
-                    positionValue.textContent = (currentPosition - previousOffset + positionOffset).toFixed(1);
+                    offsetDisplay.textContent = `Offset: ${(positionOffset/10).toFixed(1)} cm`;
+                    // Update position using currentPositionInMeters
+                    currentPositionInMeters = currentPositionInMeters - previousOffset/1000 + positionOffset/1000;
+                    positionValue.textContent = formatPosition(currentPositionInMeters);
                 }
             };
         }
@@ -365,7 +395,7 @@
         const status = document.getElementById('status');
         const maxPosition = document.getElementById('max-position');
         const offsetDisplay = document.getElementById('offset-display');
-        offsetDisplay.textContent = `Offset: ${positionOffset} mm`;
+        offsetDisplay.textContent = `Offset: ${(positionOffset/10).toFixed(1)} cm`;
 
         const command = document.getElementById('command');
 
@@ -394,17 +424,33 @@
         document.querySelectorAll('.num-button').forEach(button => {
             if (!button.classList.contains('cancel-jog')) {
                 button.addEventListener('click', () => {
-                    if (button.textContent === '⌫') {
+                    if (button.textContent === 'clear') {
+                        currentNum = '0';
+                        numberEntered = false;
+                    } else if (button.textContent === 'unit') {
+                        isMetric = !isMetric;
+                        localStorage.setItem('isMetric', isMetric);
+                        updateDisplays();
+                    } else if (button.textContent === '⌫') {
                         currentNum = currentNum.slice(0, -1) || '0';
                         numberEntered = currentNum !== '0';
                     } else if (button.textContent === '-') {
-                        if (currentNum === '0' || currentNum === '') {
-                            currentNum = '-';
+                        if (currentNum !== '0') {
+                            currentNum = currentNum.startsWith('-') ? 
+                                currentNum.slice(1) : '-' + currentNum;
+                        }
+                    } else if (button.textContent === '.') {
+                        if (!currentNum.includes('.')) {
+                            currentNum += '.';
                             numberEntered = true;
                         }
                     } else if (button.classList.contains('send-jog')) {
                         if (numberEntered) {  // Send if user has entered any number
-                            let jogValue = MAX_POSITION - (parseFloat(currentNum) - positionOffset);
+                            let targetPosition = parseFloat(currentNum);
+                            if (!isMetric) {
+                                targetPosition = ftToM(targetPosition);
+                            }
+                            let jogValue = MAX_POSITION - (targetPosition * 1000 - positionOffset);
                             if (jogValue < 0) {
                                 jogValue = 0;
                             }
@@ -414,9 +460,21 @@
                         }
                     } else if (button.classList.contains('set-offset')) {
                         if (numberEntered) {
-                            const newOffset = parseInt(currentNum);
+                            const newOffset = parseInt(currentNum * 10); // Convert cm to mm
                             if (!isNaN(newOffset)) {
                                 ws.send(`offset:${newOffset}`);
+                                // Update displays immediately
+                                const previousOffset = positionOffset;
+                                positionOffset = newOffset;
+                                offsetDisplay.textContent = `Offset: ${(positionOffset/10).toFixed(1)} cm`;
+                                
+                                // Update position with new offset
+                                const currentValue = parseFloat(positionValue.textContent);
+                                const currentMeters = isMetric ? currentValue : ftToM(currentValue);
+                                const newPosition = currentMeters - previousOffset/1000 + newOffset/1000;
+                                currentPositionInMeters = newPosition; // Store the new position in meters
+                                // Use the formatPosition function to maintain consistent decimal places
+                                positionValue.textContent = formatPosition(currentPositionInMeters);
                             }
                             currentNum = '0';
                             numberEntered = false;

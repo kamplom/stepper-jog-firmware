@@ -90,8 +90,41 @@ async def websocket_endpoint(websocket: WebSocket):
         pass
     finally:
         connected_clients.remove(websocket)
-        serial_handler.disconnect()
 
+@app.websocket("/ws/serial")  # New endpoint for raw serial communication
+async def websocket_serial_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    
+    try:
+        if not serial_handler.connect():
+            await websocket.send_text("Failed to connect to serial port")
+            await websocket.close(code=1001)
+            return
+            
+        await websocket.send_text("Connected to serial port\n")
+        
+        while True:
+            try:
+                # Check for incoming commands
+                cmd = await asyncio.wait_for(websocket.receive_text(), timeout=0.001)
+                if cmd:
+                    serial_handler.send_command(cmd)
+            except asyncio.TimeoutError:
+                pass
+            except WebSocketDisconnect:
+                break
+                
+            # Read raw serial data
+            raw_data = serial_handler.read_raw()
+            if raw_data:
+                await websocket.send_text(raw_data.decode('utf-8', errors='replace'))
+                
+            await asyncio.sleep(0.001)
+            
+    except WebSocketDisconnect:
+        pass
+    finally:
+        pass
 async def broadcast(data):
     for client in connected_clients:
         try:

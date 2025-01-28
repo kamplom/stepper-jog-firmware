@@ -81,7 +81,7 @@
         }
     </style>
 </head>
-<body>
+<body>f
     <div class="container">
         <div class="status-container">
             <div class="status-item">
@@ -94,20 +94,53 @@
             </div>
             <div class="status-item">
                 <span class="status-label">Offset:</span>
-                <span class="status-value" id="offset-display">0 mm</span>
+                <span class="status-value" id="offset-display">0 cm</span>
             </div>
         </div>
         <div class="measurement-container">
-            <div class="position-value" id="position-value">0.0</div>
+            <div class="position-value" id="position-value">0.000</div>
         </div>
         <div class="unit-container">
-            <div class="position-unit">mm</div>
+            <div class="position-unit">m</div>
         </div>
     </div>
     
     <script>
         const MAX_POSITION = 4232; 
         let positionOffset = parseInt(localStorage.getItem('positionOffset')) || 0;
+        let isMetric = localStorage.getItem('isMetric') !== 'false';  // default to true if not set
+        let currentPositionInMeters = 0;  // Track position in meters
+        
+        // Add storage event listener to sync units across pages
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'isMetric') {
+                isMetric = e.newValue !== 'false';
+                updateDisplays();  // Use the same function name as index.html
+            }
+        });
+
+        // Conversion functions
+        const mToFt = m => m * 3.28084;
+        const ftToM = ft => ft / 3.28084;
+
+        // Function to format the current position based on unit
+        function formatPosition(meters) {
+            return isMetric ? 
+                meters.toFixed(3) : 
+                mToFt(meters).toFixed(2);  // Two decimals for imperial
+        }
+
+        // Function to update all display elements with current unit
+        function updateDisplays() {
+            const unit = isMetric ? 'm' : 'ft';
+            document.querySelector('.position-unit').textContent = unit;
+            positionValue.textContent = formatPosition(currentPositionInMeters);
+            
+            // Update max position (assuming it's also stored in meters)
+            const maxMeters = parseFloat(maxPosition.textContent.split(':')[1]);
+            maxPosition.textContent = `Max pos: ${formatPosition(maxMeters)} ${unit}`;
+        }
+
         let reconnectAttempts = 0;
         let maxReconnectAttempts = 5;
         let reconnectTimeout = 1000;
@@ -146,18 +179,20 @@
             ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 if (data.type === 'position') {
-                    positionValue.textContent = (MAX_POSITION - data.value + positionOffset).toFixed(1);
+                    currentPositionInMeters = (MAX_POSITION - data.value + positionOffset)/1000;
+                    positionValue.textContent = formatPosition(currentPositionInMeters);
                 } else if (data.type === 'status') {
-                    status.textContent = `${data.state.replace('MLOCKED', '')}`;
+                    status.textContent = data.state.replace('MLOCKED', '').replace('|', '');
                     isLocked = data.state.includes('MLOCKED');
-                    maxPosition.textContent = `${(MAX_POSITION - data.max_position + positionOffset).toFixed(1)} mm`;
+                    const maxPositionMeters = (MAX_POSITION - data.max_position + positionOffset)/1000;
+                    maxPosition.textContent = `Max pos: ${formatPosition(maxPositionMeters)} ${isMetric ? 'm' : 'ft'}`;
                 } else if (data.type === 'offset') {
                     const previousOffset = positionOffset;
                     positionOffset = data.value;
-                    offsetDisplay.textContent = `${positionOffset} mm`;
-                    // Update position value with new offset
-                    const currentPosition = parseFloat(positionValue.textContent);
-                    positionValue.textContent = (currentPosition - previousOffset + positionOffset).toFixed(1);
+                    offsetDisplay.textContent = `Offset: ${(positionOffset/10).toFixed(1)} cm`;
+                    // Update position using currentPositionInMeters
+                    currentPositionInMeters = currentPositionInMeters - previousOffset/1000 + positionOffset/1000;
+                    positionValue.textContent = formatPosition(currentPositionInMeters);
                 }
             };
         }
@@ -169,6 +204,9 @@
         const maxPosition = document.getElementById('max-position');
         const offsetDisplay = document.getElementById('offset-display');
         offsetDisplay.textContent = `Offset: ${positionOffset} mm`;
+
+        // Initialize displays with current unit
+        updateDisplays();
     </script>
 </body>
 </html>

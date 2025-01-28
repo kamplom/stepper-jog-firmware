@@ -86,6 +86,24 @@ class SerialHandler:
             self.ser = None
             self.last_working_port = None
         return None
+
+    def read_raw(self):
+        """Read raw data from serial port"""
+        try:
+            if not self.ser:
+                return None
+                
+            if self.ser.in_waiting:
+                return self.ser.read(self.ser.in_waiting)
+                
+        except SerialException:
+            try:
+                self.ser.close()
+            except:
+                pass
+            self.ser = None
+            self.last_working_port = None
+        return None
     
     def send_command(self, cmd):
         try:
