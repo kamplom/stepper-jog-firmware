@@ -354,6 +354,7 @@
 
         // Keep track of the real position in meters
         let currentPositionInMeters = 0;
+        let isJogging = false;  // Add state tracker
 
         function updateDisplays() {
             const unit = isMetric ? 'm' : 'ft';
@@ -372,9 +373,9 @@
                 console.log('Connected');
                 reconnectAttempts = 0;
                 document.body.style.opacity = '1';
-                // Add position polling
+                // Modified polling to check jogging state
                 setInterval(() => {
-                    if (ws.readyState === WebSocket.OPEN) {
+                    if (ws.readyState === WebSocket.OPEN && !isJogging) {
                         ws.send('?');
                     }
                 }, 10000);
@@ -406,6 +407,7 @@
                 } else if (data.type === 'status') {
                     status.textContent = `State: ${data.state.replace('MLOCKED', '').replace('|', '')}`;
                     isLocked = data.state.includes('MLOCKED');
+                    isJogging = data.state.includes('JOGGING');  // Track jogging state
                     lockButton.className = `action-button lock-button ${isLocked ? 'locked' : 'unlocked'}`;
                     const maxPositionMeters = (MAX_POSITION - data.max_position + positionOffset)/1000;
                     maxPosition.textContent = `Max pos: ${formatPosition(maxPositionMeters)} ${isMetric ? 'm' : 'ft'}`;

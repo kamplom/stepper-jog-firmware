@@ -110,6 +110,7 @@
         let positionOffset = parseInt(localStorage.getItem('positionOffset')) || 0;
         let isMetric = true;  // Default to metric, will be updated by server
         let currentPositionInMeters = 0;  // Track position in meters
+        let isJogging = false;  // Add state tracker
         
         // Conversion functions
         const mToFt = m => m * 3.28084;
@@ -145,9 +146,9 @@
                 console.log('Connected');
                 reconnectAttempts = 0;
                 document.body.style.opacity = '1';
-                // Add position polling
+                // Modified polling to check jogging state
                 setInterval(() => {
-                    if (ws.readyState === WebSocket.OPEN) {
+                    if (ws.readyState === WebSocket.OPEN && !isJogging) {
                         ws.send('?');
                     }
                 }, 10000);
@@ -178,6 +179,7 @@
                     updateDisplays();
                 } else if (data.type === 'status') {
                     status.textContent = data.state.replace('MLOCKED', '').replace('|', '');
+                    isJogging = data.state.includes('JOGGING');  // Track jogging state
                     isLocked = data.state.includes('MLOCKED');
                     const maxPositionMeters = (MAX_POSITION - data.max_position + positionOffset)/1000;
                     maxPosition.textContent = `${formatPosition(maxPositionMeters)} ${isMetric ? 'm' : 'ft'}`;
