@@ -56,9 +56,11 @@ void app_main(void)
                 if(sys.target.pos > sys.status.pos) {
                     sys.status.vel = settings.motion.vel.min;
                     sys.hard_limit_pin = settings.gpio.limit_max;
+                    sys.target.pos = sys.target.pos + mm_to_pulses_f(1);
                 } else {
                     sys.status.vel = -settings.motion.vel.min;
                     sys.hard_limit_pin = settings.gpio.limit_min;
+                    sys.target.pos = sys.target.pos - mm_to_pulses(0.5);
                 }
                 iterations = 0;
 
@@ -72,7 +74,7 @@ void app_main(void)
                 //loop until we reach the target position. transmit a step each iteration
                 while (abs(sys.real.pos - (int32_t)sys.target.pos) > 1 && gpio_get_level(sys.hard_limit_pin)) {
                     //first symbol is sent without setting the motor direction
-                    symbol_duration = (settings.rmt.motor_resolution / (uint32_t)abs(jog_aux.status.vel) / 2);
+                    symbol_duration = (3200 * settings.rmt.motor_resolution / settings.units.steps_rev + 1) / (uint32_t)abs(jog_aux.status.vel) / 2;
                     symbol.duration0 = symbol_duration;
                     symbol.duration1 = symbol_duration;
                     rmt_transmit(motor_chan, stepper_encoder, &symbol, sizeof(rmt_symbol_word_t), &tx_config);
