@@ -8,7 +8,7 @@
     },
     "idf.espIdfPath": "/home/mike/esp/v5.2.1/esp-idf",
     "idf.openOcdConfigs": [
-        "board/esp32s3-builtin.cfg"
+        "board/esp32s3-bridge.cfg"
     ],
     "idf.port": "/dev/ttyACM0",
     "idf.pythonBinPath": "/home/mike/.espressif/python_env/idf5.2_py3.12_env/bin/python",

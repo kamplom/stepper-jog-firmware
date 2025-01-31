@@ -193,10 +193,17 @@ class Settings:
         # Read and parse response
         start_time = time.time()
         while time.time() - start_time < 10:  # Loop for up to 10 seconds
-            line = self.ser.readline().decode('utf-8').strip()
-            if '=' in line:
-                key, value = line.split('=')
-                self.values[int(key)] = int(value)
+            try:
+                line = self.ser.readline().decode('utf-8').strip()
+                # Skip lines starting with '>'
+                if not line or line.startswith('>'):
+                    continue
+                if '=' in line:
+                    key, value = line.split('=')
+                    self.values[int(key)] = int(value)
+            except UnicodeDecodeError:
+                # Skip lines that can't be decoded
+                continue
            
                 
     def save_to_file(self):
