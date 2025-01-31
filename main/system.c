@@ -155,7 +155,7 @@ void parse_jog_command(const char *command, size_t len) {
 
 void parse_set_setting(const char *command, size_t len) {
     //improve this shitty statement
-    if (!(sys.state & STATE_IDLE)) {
+    if ((sys.state & STATE_JOGGING) || (sys.state & STATE_HOMING)) {
         return;
     }
     char *copy = strndup(command, len);
@@ -277,7 +277,7 @@ void homing(void)
     uint32_t symbol_duration = 0;
     rmt_symbol_word_t symbol;
     int phase = 0;
-    symbol_duration = settings.rmt.motor_resolution / settings.homing.fast_vel / 2;
+    symbol_duration = 3200 * settings.rmt.motor_resolution / settings.units.steps_rev / settings.homing.fast_vel / 2;
     symbol.duration0 = symbol_duration;
     symbol.level0 = 0;
     symbol.duration1 = symbol_duration;
@@ -296,7 +296,7 @@ void homing(void)
     ESP_LOGI(TAG, "supposed value: %d", !(settings.motion.dir^settings.homing.direction));
     ESP_LOGI(TAG, "dir gpio: %d", gpio_get_level(settings.gpio.motor_dir));
 
-    while (1)
+    while (sys.state == STATE_HOMING)
     {
         if (phase == 0)
         {
@@ -308,7 +308,7 @@ void homing(void)
             {
                 phase = 1;
                 invert_motor_direction();
-                symbol_duration = settings.rmt.motor_resolution / settings.homing.slow_vel / 2;
+                symbol_duration = 3200 * settings.rmt.motor_resolution / settings.units.steps_rev / settings.homing.slow_vel / 2;
                 symbol.duration0 = symbol_duration;
                 symbol.duration1 = symbol_duration;
             }
@@ -321,7 +321,7 @@ void homing(void)
             }
             phase = 2;
             invert_motor_direction();
-            symbol_duration = settings.rmt.motor_resolution / settings.homing.slow_vel / 2;
+            symbol_duration = 3200 * settings.rmt.motor_resolution / settings.units.steps_rev / settings.homing.slow_vel / 2;
             symbol.duration0 = symbol_duration;
             symbol.duration1 = symbol_duration;
         }
@@ -335,7 +335,7 @@ void homing(void)
             {
                 phase = 3;
                 invert_motor_direction();
-                symbol_duration = settings.rmt.motor_resolution / settings.homing.slow_vel / 2;
+                symbol_duration = 3200 * settings.rmt.motor_resolution / settings.units.steps_rev / settings.homing.slow_vel / 2;
                 symbol.duration0 = symbol_duration;
                 symbol.duration1 = symbol_duration;
             }
